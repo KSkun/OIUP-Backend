@@ -1,3 +1,7 @@
+/*
+   OIUP-Backend Project is developed by KSkun and licensed under GPL-3.0.
+   Copyright (c) KSkun, 2020
+*/
 package main
 
 import (
@@ -8,7 +12,7 @@ import (
 func main() {
 	router := gin.Default()
 
-	
 
-	_ = router.Run(config.RouterAddress)
+
+	_ = router.Run(":" + string(config.Config.HTTP.Port))
 }

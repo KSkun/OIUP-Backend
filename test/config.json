@@ -1,0 +1,21 @@
+{
+  "http": {
+    "port": 8081
+  },
+  "jwt": {
+    "signing_method": "HS256",
+    "secret_user": "test-user-secret",
+    "secret_backstage": "test-backstage-secret",
+    "token_life": 360
+  },
+  "db": {
+    "db_file": "data.db",
+    "table_user": "user",
+    "table_problem": "problem",
+    "table_submit": "submit"
+  },
+  "file": {
+    "directory_upload": "upload",
+    "directory_source": "source"
+  }
+}
