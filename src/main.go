@@ -6,13 +6,16 @@ package main
 
 import (
 	"OIUP-Backend/config"
+	"OIUP-Backend/view"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 func main() {
 	router := gin.Default()
 
+	userGroup := router.Group("/user")
+	view.InitUserView(userGroup)
 
-
-	_ = router.Run(":" + string(config.Config.HTTP.Port))
+	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 }

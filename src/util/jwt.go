@@ -12,8 +12,8 @@ import (
 )
 
 func GetIDFromContext(context *gin.Context) string {
-	claims, _ := context.Get("claims")
-	return claims.(jwt.MapClaims)["id"].(string)
+	id, _ := context.Get("id")
+	return id.(string)
 }
 
 func NewJWTToken(sub string, aud string, secret []byte) (string, error) {

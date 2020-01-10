@@ -10,14 +10,14 @@ import (
 )
 
 type HTTPConfig struct {
-	Port      		   int32	  `json:"port"`
+	Port      		   int  	  `json:"port"`
 }
 
 type JWTConfig struct {
 	JWTSigningMethod   string	  `json:"signing_method"`
 	JWTUserSecret      string 	  `json:"secret_user"`
 	JWTBackstageSecret string 	  `json:"secret_backstage"`
-	JWTTokenLife       int32      `json:"token_life"`       // Unit: minute
+	JWTTokenLife       int        `json:"token_life"`       // Unit: minute
 }
 
 type DBConfig struct {
@@ -42,6 +42,6 @@ type ConfigObject struct {
 var Config ConfigObject
 
 func init() {
-	configFile, _ := ioutil.ReadFile("./config/config.yml")
+	configFile, _ := ioutil.ReadFile("config.json")
 	_ = json.Unmarshal(configFile, &Config)
 }

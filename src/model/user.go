@@ -6,7 +6,6 @@ package model
 
 import (
     "OIUP-Backend/config"
-    _ "github.com/mattn/go-sqlite3"
 )
 
 type LanguageType int32
@@ -18,42 +17,43 @@ const (
 )
 
 type UserInfo struct {
-    Name      string
-    School    string
-    ContestID string
-    PersonID  string
-    Language  LanguageType
+    Name      string       `json:"name"`
+    School    string       `json:"school"`
+    ContestID string       `json:"contest_id"`
+    PersonID  string       `json:"person_id"`
+    Language  LanguageType `json:"language"`
 }
 
-var addUserQuery, _ = db.Prepare("INSERT INTO " + config.Config.DB.TableUser + " VALUES (?, ?, ?, ?, ?)")
-
 func AddUser(user UserInfo) error {
+    addUserQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableUser +
+        " VALUES (?, ?, ?, ?, ?)")
     _, err := addUserQuery.Exec(user.Name, user.School, user.ContestID, user.PersonID, user.Language)
     return err
 }
 
-var deleteUserQuery, _ = db.Prepare("DELETE FROM " + config.Config.DB.TableUser + " WHERE contest_id = ?")
-
 func DeleteUser(contestID string) error {
+    deleteUserQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableUser +
+        " WHERE contest_id = ?")
     _, err := deleteUserQuery.Exec(contestID)
     return err
 }
 
-var getUserQuery, _ = db.Prepare("SELECT * FROM " + config.Config.DB.TableUser + " WHERE contest_id = ?")
-
 func GetUser(contestID string) (UserInfo, error) {
+    getUserQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableUser +
+        " WHERE contest_id = ?")
     var user UserInfo
     rows, err := getUserQuery.Query(contestID)
     if err != nil {
         return user, err
     }
+    rows.Next()
     err = rows.Scan(&user.Name, &user.School, &user.ContestID, &user.PersonID, &user.Language)
     return user, err
 }
 
-var uploadUserQuery, _ = db.Prepare("UPDATE "  + config.Config.DB.TableUser + " SET name = ?, school = ?, person_id = ?, language = ? WHERE contest_id = ?")
-
 func UpdateUser(user UserInfo) error {
-    _, err := uploadUserQuery.Exec(user.Name, user.School, user.PersonID, user.Language, user.ContestID)
+    updateUserQuery, _ := db.Prepare("UPDATE "  + config.Config.DB.TableUser +
+        " SET name = ?, school = ?, person_id = ?, language = ? WHERE contest_id = ?")
+    _, err := updateUserQuery.Exec(user.Name, user.School, user.PersonID, user.Language, user.ContestID)
     return err
 }

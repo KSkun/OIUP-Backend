@@ -9,14 +9,14 @@ import (
 	"net/http"
 )
 
-func SuccessResponse(context *gin.Context, data *gin.H) {
+func SuccessResponse(context *gin.Context, data interface{}) {
 	context.JSON(http.StatusOK, gin.H{
 		"message": 	"",
 		"data": 	data,
 	})
 }
 
-func ErrorResponse(context *gin.Context, code int, message string, data *gin.H) {
+func ErrorResponse(context *gin.Context, code int, message string, data interface{}) {
 	context.JSON(code, gin.H{
 		"message": 	message,
 		"data": 	data,
