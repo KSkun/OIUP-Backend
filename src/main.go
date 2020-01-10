@@ -13,8 +13,9 @@ import (
 
 func main() {
 	router := gin.Default()
+	apiGroup := router.Group("/api/v1")
 
-	userGroup := router.Group("/user")
+	userGroup := apiGroup.Group("/user")
 	view.InitUserView(userGroup)
 
 	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))

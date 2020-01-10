@@ -38,17 +38,20 @@ func DeleteUser(contestID string) error {
     return err
 }
 
-func GetUser(contestID string) (UserInfo, error) {
+func GetUser(contestID string) (UserInfo, bool, error) {
     getUserQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableUser +
         " WHERE contest_id = ?")
     var user UserInfo
     rows, err := getUserQuery.Query(contestID)
     if err != nil {
-        return user, err
+        return user, false, err
     }
-    rows.Next()
+
+    if !rows.Next() {
+        return user, false, nil
+    }
     err = rows.Scan(&user.Name, &user.School, &user.ContestID, &user.PersonID, &user.Language)
-    return user, err
+    return user, true, nil
 }
 
 func UpdateUser(user UserInfo) error {

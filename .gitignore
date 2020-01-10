@@ -2,3 +2,5 @@
 src/go.sum
 *.zip
 design
+test/source
+test/upload
