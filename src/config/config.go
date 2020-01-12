@@ -90,7 +90,7 @@ func init() {
 	}
 
 	Config.Contest.Problems = make(ProblemMap, 0)
-	for _, problem := range Config.Contest.Problems {
+	for _, problem := range Config.Contest.ProblemSet {
 		Config.Contest.Problems[problem.ID] = problem
 	}
 

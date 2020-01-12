@@ -4,7 +4,6 @@ import (
     "OIUP-Backend/config"
     "encoding/json"
     "errors"
-    "github.com/satori/go.uuid"
     "time"
 )
 
@@ -28,25 +27,23 @@ type MD5Info struct {
     TestID int    `json:"test_id"`
 }
 
-func AddCodeSubmit(user string, md5 string, time time.Time, problemID int) (string, error) {
+func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
     addCodeSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    submitID := uuid.NewV4()
-    _, err := addCodeSubmitQuery.Exec(submitID.String(), user, md5, time.Unix(), problemID, 0)
-    return submitID.String(), err
+    _, err := addCodeSubmitQuery.Exec(submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed)
+    return err
 }
 
-func AddOutputSubmit(user string, md5Set []MD5Info, time time.Time, problemID int) (string, error) {
+func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.Time, problemID int) error {
     md5JSON, err := json.Marshal(md5Set)
     if err != nil {
-        return "", err
+        return err
     }
 
     addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    submitID := uuid.NewV4()
-    _, err = addOutputSubmitQuery.Exec(submitID.String(), user, md5JSON, time.Unix(), problemID, 0)
-    return submitID.String(), err
+    _, err = addOutputSubmitQuery.Exec(submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed)
+    return err
 }
 
 func GetSubmit(submitID string) (SubmitInfo, bool, error) {
@@ -109,8 +106,30 @@ func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
 }
 
 func ConfirmSubmit(submitID string) error {
+    submit, found, err := GetSubmit(submitID)
+    if err != nil {
+        return err
+    }
+    if !found {
+        return errors.New("submit with id " + submitID + " not found")
+    }
+
     confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
-    _, err := confirmSubmitQuery.Exec(1, submitID)
+    _, err = confirmSubmitQuery.Exec(SubmitConfirmed, submitID)
+    if err != nil {
+        return err
+    }
+
+    deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
+        " WHERE user = ?, problem_id = ?")
+    _, err = deleteLatestSubmitQuery.Exec(submit.User, submit.ProblemID)
+    if err != nil {
+        return err
+    }
+
+    addLatestSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
+        " VALUES (?, ?, ?)")
+    _, err = addLatestSubmitQuery.Exec(submit.User, submitID, submit.ProblemID)
     return err
 }

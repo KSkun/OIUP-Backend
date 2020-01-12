@@ -7,6 +7,6 @@ import (
 )
 
 func InitUserView(group *gin.RouterGroup) {
-    group.GET("/token", controller.GetTokenHandler)
-    group.GET("/info", middleware.ValidateUserToken, controller.GetInfoHandler)
+    group.GET("/token", controller.UserTokenHandler)
+    group.GET("/info", middleware.ValidateUserToken, controller.UserInfoHandler)
 }

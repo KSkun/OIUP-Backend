@@ -31,7 +31,7 @@ func getContestStatus() (int, error) {
     return ContestStatusRunning, nil
 }
 
-func StatusHandler(context *gin.Context) {
+func ContestStatusHandler(context *gin.Context) {
     status, err := getContestStatus()
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
@@ -45,15 +45,15 @@ func StatusHandler(context *gin.Context) {
     util.SuccessResponse(context, response)
 }
 
-func NameHandler(context *gin.Context) {
+func ContestNameHandler(context *gin.Context) {
     util.SuccessResponse(context, gin.H{"name": config.Config.Contest.Name})
 }
 
-func ProblemsHandler(context *gin.Context) {
+func ContestProblemsHandler(context *gin.Context) {
     util.SuccessResponse(context, gin.H{"url": config.Config.Contest.Download})
 }
 
-func UnzipHandler(context *gin.Context) {
+func ContestUnzipHandler(context *gin.Context) {
     nowTime := time.Now()
     validTime := config.Config.Contest.StartTime.Add(-time.Minute * time.Duration(config.Config.Contest.UnzipShift))
     if nowTime.Before(validTime) {

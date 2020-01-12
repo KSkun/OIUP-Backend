@@ -12,7 +12,7 @@ type GetTokenRequest struct {
     PersonID  string `form:"person_id" binding:"required"`
 }
 
-func GetTokenHandler(context *gin.Context) {
+func UserTokenHandler(context *gin.Context) {
     var request GetTokenRequest
     if err := context.Bind(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
@@ -46,7 +46,7 @@ func GetTokenHandler(context *gin.Context) {
     util.SuccessResponse(context, gin.H{"token": token})
 }
 
-func GetInfoHandler(context *gin.Context) {
+func UserInfoHandler(context *gin.Context) {
     contestID := util.GetIDFromContext(context)
     user, found, err := model.GetUser(contestID)
     if err != nil {

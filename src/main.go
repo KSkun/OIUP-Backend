@@ -21,5 +21,8 @@ func main() {
 	contestGroup := apiGroup.Group("/contest")
 	view.InitContestView(contestGroup)
 
+	problemGroup := apiGroup.Group("/problem")
+	view.InitProblemView(problemGroup)
+
 	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 }
