@@ -36,12 +36,10 @@ type FileConfig struct {
 	DirectorySource	   string        `json:"directory_source"`
 }
 
-type ProblemType int
-
 const (
-	ProblemClassic  ProblemType = 1
-	ProblemAnswer   ProblemType = 2
-	ProblemInteract ProblemType = 3
+	ProblemClassic  = 1
+	ProblemAnswer   = 2
+	ProblemInteract = 3
 )
 
 type ProblemInfo struct {
@@ -50,24 +48,26 @@ type ProblemInfo struct {
 	Filename           string        `json:"filename"`
 	TimeLimit          string        `json:"time_limit"`
 	SpaceLimit         string        `json:"space_limit"`
-	Type               ProblemType   `json:"type"`
+	Type               int           `json:"type"`
 }
 
-type ContestStatus int
-
 const (
-	ContestStatusDefault ContestStatus = 1
-	ContestStatusError   ContestStatus = -1
+	ContestStatusDefault int = 1
+	ContestStatusError   int = -1
 )
 
 type ProblemMap map[int]ProblemInfo
 
 type ContestConfig struct {
 	Name			   string 	     `json:"name"`
-	Status             ContestStatus `json:"status"`
+	Status             int           `json:"status"`
 	Message            string        `json:"message"`
-	StartTime		   string        `json:"start_time"`
+	StartTimeStr	   string        `json:"start_time"`
+	StartTime          time.Time
 	Duration           float32       `json:"duration"`      // Unit: Hour
+	Download           string        `json:"download"`
+	UnzipToken         string        `json:"unzip_token"`
+	UnzipShift         int           `json:"unzip_shift"`   // Unit: Minute
 	ProblemSet		   []ProblemInfo `json:"problems"`
 	Problems		   ProblemMap
 }
@@ -84,12 +84,21 @@ var Config ConfigObject
 
 func init() {
 	configFile, _ := ioutil.ReadFile("config.json")
-	_ = json.Unmarshal(configFile, &Config)
+	err := json.Unmarshal(configFile, &Config)
+	if err != nil {
+		panic(err)
+	}
 
 	Config.Contest.Problems = make(ProblemMap, 0)
 	for _, problem := range Config.Contest.Problems {
 		Config.Contest.Problems[problem.ID] = problem
 	}
+
+	startTime, err := time.ParseInLocation("2006-01-02 15:04", Config.Contest.StartTimeStr, time.Local)
+	if err != nil {
+		panic("config error: invalid start_time, " + err.Error())
+	}
+	Config.Contest.StartTime = startTime
 }
 
 func SaveConfig() {

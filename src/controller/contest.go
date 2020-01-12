@@ -15,41 +15,51 @@ const (
     ContestStatusError     = -1
 )
 
-func StatusHandler(context *gin.Context) {
+func getContestStatus() (int, error) {
     if config.Config.Contest.Status == config.ContestStatusError {
-        util.SuccessResponse(context, gin.H{
-            "status":  ContestStatusError,
-            "message": config.Config.Contest.Message,
-        })
-        return
+        return ContestStatusError, nil
     }
 
-    startTime, err := time.Parse("2006-01-02 15:04", config.Config.Contest.StartTime)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError,
-            "config error: invalid start_time", nil)
-        return
+    startTime := config.Config.Contest.StartTime
+    nowTime := time.Now()
+    if nowTime.Before(startTime) {
+        return ContestStatusPreparing, nil
     }
-    if time.Now().Unix() < startTime.Unix() {
-        util.SuccessResponse(context, gin.H{
-            "status":  ContestStatusPreparing,
-            "message": "",
-        })
-        return
+    if nowTime.After(startTime.Add(time.Hour * time.Duration(config.Config.Contest.Duration))) {
+        return ContestStatusEnd, nil
     }
-    if time.Now().Unix() > startTime.Add(time.Minute * time.Duration(config.Config.Contest.Duration)).Unix() {
-        util.SuccessResponse(context, gin.H{
-            "status":  ContestStatusEnd,
-            "message": "",
-        })
-        return
-    }
-    util.SuccessResponse(context, gin.H{
-        "status":  ContestStatusRunning,
-        "message": "",
-    })
+    return ContestStatusRunning, nil
 }
 
-func SubmitStatusHandler(context *gin.Context) {
+func StatusHandler(context *gin.Context) {
+    status, err := getContestStatus()
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
 
+    response := gin.H{"status": status, "message": ""}
+    if status == ContestStatusError {
+        response["message"] = config.Config.Contest.Message
+    }
+    util.SuccessResponse(context, response)
+}
+
+func NameHandler(context *gin.Context) {
+    util.SuccessResponse(context, gin.H{"name": config.Config.Contest.Name})
+}
+
+func ProblemsHandler(context *gin.Context) {
+    util.SuccessResponse(context, gin.H{"url": config.Config.Contest.Download})
+}
+
+func UnzipHandler(context *gin.Context) {
+    nowTime := time.Now()
+    validTime := config.Config.Contest.StartTime.Add(-time.Minute * time.Duration(config.Config.Contest.UnzipShift))
+    if nowTime.Before(validTime) {
+        util.ErrorResponse(context, http.StatusForbidden, "contest has not started", nil)
+        return
+    }
+
+    util.SuccessResponse(context, gin.H{"unzip_token": config.Config.Contest.UnzipToken})
 }

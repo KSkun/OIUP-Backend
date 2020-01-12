@@ -8,12 +8,10 @@ import (
     "OIUP-Backend/config"
 )
 
-type LanguageType int32
-
 const (
-    LanguageCPlusPlus LanguageType = 1
-    LanguageC         LanguageType = 2
-    LanguagePascal    LanguageType = 3
+    LanguageCPlusPlus = 1
+    LanguageC         = 2
+    LanguagePascal    = 3
 )
 
 type UserInfo struct {
@@ -21,7 +19,7 @@ type UserInfo struct {
     School    string       `json:"school"`
     ContestID string       `json:"contest_id"`
     PersonID  string       `json:"person_id"`
-    Language  LanguageType `json:"language"`
+    Language  int          `json:"language"`
 }
 
 func AddUser(user UserInfo) error {

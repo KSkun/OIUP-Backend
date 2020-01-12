@@ -22,8 +22,11 @@
     "name": "CSP-S2 2019 Day 1 (提高组)",
     "status": 1,
     "message": "",
-    "start_time": "2020-02-01 08:30",
+    "start_time": "2020-01-12 10:00",
     "duration": 3.5,
+    "download": "test",
+    "unzip_token": "BuWang",
+    "unzip_shift": 10,
     "problems": [
       {
         "id": 1,
@@ -39,7 +42,7 @@
         "filename": "brackets",
         "time_limit": "1.0 秒",
         "space_limit": "256 MiB",
-        "type": 1,
+        "type": 1
       },
       {
         "id": 3,

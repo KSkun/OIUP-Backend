@@ -36,6 +36,19 @@ func AddCodeSubmit(user string, md5 string, time time.Time, problemID int) (stri
     return submitID.String(), err
 }
 
+func AddOutputSubmit(user string, md5Set []MD5Info, time time.Time, problemID int) (string, error) {
+    md5JSON, err := json.Marshal(md5Set)
+    if err != nil {
+        return "", err
+    }
+
+    addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
+        " VALUES (?, ?, ?, ?, ?, ?)")
+    submitID := uuid.NewV4()
+    _, err = addOutputSubmitQuery.Exec(submitID.String(), user, md5JSON, time.Unix(), problemID, 0)
+    return submitID.String(), err
+}
+
 func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     getSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableSubmit +
         " WHERE id = ?")
@@ -93,4 +106,11 @@ func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
         return submit, false, errors.New("wrong latest_submit record")
     }
     return submit, true, nil
+}
+
+func ConfirmSubmit(submitID string) error {
+    confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
+        " SET confirm = ? WHERE id = ?")
+    _, err := confirmSubmitQuery.Exec(1, submitID)
+    return err
 }

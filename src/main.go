@@ -18,5 +18,8 @@ func main() {
 	userGroup := apiGroup.Group("/user")
 	view.InitUserView(userGroup)
 
+	contestGroup := apiGroup.Group("/contest")
+	view.InitContestView(contestGroup)
+
 	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 }

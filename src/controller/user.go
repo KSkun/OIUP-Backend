@@ -23,9 +23,13 @@ func GetTokenHandler(context *gin.Context) {
         return
     }
 
-    user, err := model.GetUser(request.ContestID)
+    user, found, err := model.GetUser(request.ContestID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden, "user not found", nil)
         return
     }
     if request.PersonID != user.PersonID {
@@ -44,9 +48,13 @@ func GetTokenHandler(context *gin.Context) {
 
 func GetInfoHandler(context *gin.Context) {
     contestID := util.GetIDFromContext(context)
-    user, err := model.GetUser(contestID)
+    user, found, err := model.GetUser(contestID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden, "user not found", nil)
         return
     }
 
