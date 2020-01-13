@@ -6,10 +6,8 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -107,10 +105,10 @@ func SaveConfig() {
 	_ = ioutil.WriteFile("config.json", configJSON, os.ModePerm)
 }
 
-func GetProblemConfig(problemID int) (ProblemInfo, error) {
+func GetProblemConfig(problemID int) (ProblemInfo, bool) {
 	problem, found := Config.Contest.Problems[problemID]
 	if !found {
-		return problem, errors.New("problem with id " + strconv.Itoa(problemID) + " not found")
+		return ProblemInfo{}, false
 	}
-	return problem, nil
+	return problem, true
 }

@@ -24,5 +24,8 @@ func main() {
 	problemGroup := apiGroup.Group("/problem")
 	view.InitProblemView(problemGroup)
 
+	miscGroup := apiGroup.Group("")
+	view.InitMiscView(miscGroup)
+
 	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 }

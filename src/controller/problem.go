@@ -11,6 +11,7 @@ import (
     "io/ioutil"
     "net/http"
     "os"
+    "strconv"
     "time"
 )
 
@@ -23,13 +24,20 @@ func ProblemListHandler(context *gin.Context) {
 }
 
 type RequestProblemID struct {
-    ID int
+    ID int `form:"id" binding:"required"`
 }
 
 func ProblemStatusHandler(context *gin.Context) {
     var request RequestProblemID
     if err := context.Bind(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        return
+    }
+
+    _, found := config.GetProblemConfig(request.ID)
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
 
@@ -48,9 +56,10 @@ func ProblemInfoHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
         return
     }
-    problem, err := config.GetProblemConfig(request.ID)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+    problem, found := config.GetProblemConfig(request.ID)
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
     util.SuccessResponse(context, problem)
@@ -60,6 +69,13 @@ func ProblemLatestHandler(context *gin.Context) {
     var request RequestProblemID
     if err := context.Bind(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        return
+    }
+
+    problem, found := config.GetProblemConfig(request.ID)
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
 
@@ -75,14 +91,9 @@ func ProblemLatestHandler(context *gin.Context) {
     }
 
     response := gin.H{"id": submit.ID, "md5": submit.MD5Set, "data": ""}
-    problem, err := config.GetProblemConfig(request.ID)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
-        return
-    }
     if problem.Type != config.ProblemAnswer {
         response["md5"] = submit.MD5
-        file, err := ioutil.ReadFile(config.Config.File.DirectoryUpload + "/" + submit.ID + "/code")
+        file, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + "code")
         if err != nil {
             util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
             return
@@ -93,8 +104,8 @@ func ProblemLatestHandler(context *gin.Context) {
 }
 
 type RequestCode struct {
-    ID   int    `json:"id"`
-    Code string `json:"code"`
+    ID   int    `json:"id" binding:"required"`
+    Code string `json:"code" binding:"required"`
 }
 
 func ProblemSubmitCodeHandler(context *gin.Context) {
@@ -104,14 +115,15 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
         return
     }
 
-    _, err := config.GetProblemConfig(request.ID)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+    _, found := config.GetProblemConfig(request.ID)
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
 
     submitID := uuid.NewV4()
-    err = ioutil.WriteFile(config.Config.File.DirectoryUpload + "/" + submitID.String() + "/code",
+    err := ioutil.WriteFile(util.GetUploadPath(submitID.String()) + "code",
         []byte(request.Code), os.ModePerm)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
@@ -119,51 +131,152 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
     }
 
     user := util.GetIDFromContext(context)
-    md5Str := md5.Sum([]byte(request.Code))
-    err = model.AddCodeSubmit(submitID.String(), user, hex.EncodeToString(md5Str[:]), time.Now(), request.ID)
+    md5Res := md5.Sum([]byte(request.Code))
+    md5Str := hex.EncodeToString(md5Res[:])
+    err = model.AddCodeSubmit(submitID.String(), user, md5Str, time.Now(), request.ID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
     }
+
+    util.SuccessResponse(context, gin.H{
+        "id":   submitID.String(),
+        "md5":  md5Str,
+        "data": request.Code,
+    })
 }
 
 type OutputInfo struct {
-    TestID int    `json:"test_id"`
-    Output string `json:"output"`
+    TestID int    `json:"test_id" binding:"required"`
+    Output string `json:"output" binding:"required"`
 }
 
 type RequestOutput struct {
-    ID      int          `json:"id"`
-    Outputs []OutputInfo `json:"outputs"`
+    ID      int          `json:"id" binding:"required"`
+    Outputs []OutputInfo `json:"outputs" binding:"required"`
 }
 
 func ProblemSubmitOutputHandler(context *gin.Context) {
-    var request RequestCode
+    var request RequestOutput
     if err := context.BindJSON(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
         return
     }
 
-    _, err := config.GetProblemConfig(request.ID)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+    _, found := config.GetProblemConfig(request.ID)
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
 
-    // TODO Submit Output
-    /*submitID := uuid.NewV4()
-    err = ioutil.WriteFile(config.Config.File.DirectoryUpload + "/" + submitID.String() + "/code",
-        []byte(request.Code), os.ModePerm)
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
-        return
+    submitID := uuid.NewV4()
+    for _, output := range request.Outputs {
+        err := ioutil.WriteFile(util.GetUploadPath(submitID.String()) + strconv.Itoa(output.TestID),
+            []byte(output.Output), os.ModePerm)
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+            return
+        }
     }
 
     user := util.GetIDFromContext(context)
-    md5Str := md5.Sum([]byte(request.Code))
-    err = model.AddCodeSubmit(submitID.String(), user, hex.EncodeToString(md5Str[:]), time.Now(), request.ID)
+    md5Set := make([]model.MD5Info, 0)
+    for _, output := range request.Outputs {
+        md5Res := md5.Sum([]byte(output.Output))
+        md5Str := hex.EncodeToString(md5Res[:])
+        md5Set = append(md5Set, model.MD5Info{TestID: output.TestID, MD5: md5Str})
+    }
+    err := model.AddOutputSubmit(submitID.String(), user, md5Set, time.Now(), request.ID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
-    }*/
+    }
+
+    util.SuccessResponse(context, gin.H{
+        "id":   submitID.String(),
+        "md5":  md5Set,
+        "data": "",
+    })
+}
+
+type RequestConfirm struct {
+    ID string `json:"id" binding:"required"`
+}
+
+func ProblemConfirmHandler(context *gin.Context) {
+    var request RequestConfirm
+    if err := context.BindJSON(&request); err != nil {
+        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        return
+    }
+
+    contestID := util.GetIDFromContext(context)
+    user, found, err := model.GetUser(contestID)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden, "user with contest_id " + request.ID + " not found", nil)
+        return
+    }
+
+    submit, found, err := model.GetSubmit(request.ID)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+    if !found {
+        util.ErrorResponse(context, http.StatusForbidden, "submit with id " + request.ID + " not found", nil)
+        return
+    }
+    if submit.User != contestID {
+        util.ErrorResponse(context, http.StatusForbidden, "can not confirm other's submission", nil)
+        return
+    }
+
+    problem, _ := config.GetProblemConfig(submit.ProblemID)
+    if problem.Type != config.ProblemAnswer {
+        data, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + "code")
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+            return
+        }
+
+        suffix, err := util.GetCodeSuffix(user.Language)
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+            return
+        }
+        err = ioutil.WriteFile(util.GetSourcePath(contestID, problem.Filename) + problem.Filename + suffix, data, os.ModePerm)
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+            return
+        }
+    }
+    if problem.Type == config.ProblemAnswer {
+        for _, md5Info := range submit.MD5Set {
+            data, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + strconv.Itoa(md5Info.TestID))
+            if err != nil {
+                util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+                return
+            }
+
+            err = ioutil.WriteFile(util.GetSourcePath(contestID, problem.Filename) + problem.Filename + strconv.Itoa(md5Info.TestID) + ".out",
+                data, os.ModePerm)
+            if err != nil {
+                util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+                return
+            }
+        }
+    }
+
+    err = model.ConfirmSubmit(request.ID)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+
+    util.SuccessResponse(context, nil)
 }

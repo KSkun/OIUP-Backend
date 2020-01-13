@@ -61,10 +61,7 @@ func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     err = rows.Scan(&submit.ID, &submit.User, &submit.MD5, &submit.Time, &submit.ProblemID, &submit.Confirm)
 
     // MD5Info array unmarshal
-    problemConfig, err := config.GetProblemConfig(submit.ProblemID)
-    if err != nil {
-        return submit, false, err
-    }
+    problemConfig, _ := config.GetProblemConfig(submit.ProblemID)
     if problemConfig.Type == config.ProblemAnswer {
         err = json.Unmarshal([]byte(submit.MD5), &submit.MD5Set)
         if err != nil {
@@ -83,7 +80,7 @@ type LatestSubmitInfo struct {
 
 func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
     getLatestSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableLatestSubmit +
-        " WHERE user = ?, problem_id = ?")
+        " WHERE user = ? AND problem_id = ?")
     rows, err := getLatestSubmitQuery.Query(user, problemID)
     if err != nil {
         return SubmitInfo{}, false, err
@@ -122,7 +119,7 @@ func ConfirmSubmit(submitID string) error {
     }
 
     deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
-        " WHERE user = ?, problem_id = ?")
+        " WHERE user = ? AND problem_id = ?")
     _, err = deleteLatestSubmitQuery.Exec(submit.User, submit.ProblemID)
     if err != nil {
         return err
