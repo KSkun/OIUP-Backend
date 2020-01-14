@@ -115,15 +115,25 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
         return
     }
 
-    _, found := config.GetProblemConfig(request.ID)
+    problem, found := config.GetProblemConfig(request.ID)
     if !found {
         util.ErrorResponse(context, http.StatusForbidden,
             "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
+    if problem.Type == config.ProblemAnswer {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem requires submit output files", nil)
+        return
+    }
 
     submitID := uuid.NewV4()
-    err := ioutil.WriteFile(util.GetUploadPath(submitID.String()) + "code",
+    err := os.MkdirAll(util.GetUploadPath(submitID.String()), os.ModePerm)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
+    err = ioutil.WriteFile(util.GetUploadPath(submitID.String()) + "code",
         []byte(request.Code), os.ModePerm)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
@@ -163,14 +173,24 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         return
     }
 
-    _, found := config.GetProblemConfig(request.ID)
+    problem, found := config.GetProblemConfig(request.ID)
     if !found {
         util.ErrorResponse(context, http.StatusForbidden,
             "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
         return
     }
+    if problem.Type != config.ProblemAnswer {
+        util.ErrorResponse(context, http.StatusForbidden,
+            "problem requires submit code file", nil)
+        return
+    }
 
     submitID := uuid.NewV4()
+    err := os.MkdirAll(util.GetUploadPath(submitID.String()), os.ModePerm)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
     for _, output := range request.Outputs {
         err := ioutil.WriteFile(util.GetUploadPath(submitID.String()) + strconv.Itoa(output.TestID),
             []byte(output.Output), os.ModePerm)
@@ -187,7 +207,7 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         md5Str := hex.EncodeToString(md5Res[:])
         md5Set = append(md5Set, model.MD5Info{TestID: output.TestID, MD5: md5Str})
     }
-    err := model.AddOutputSubmit(submitID.String(), user, md5Set, time.Now(), request.ID)
+    err = model.AddOutputSubmit(submitID.String(), user, md5Set, time.Now(), request.ID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
@@ -231,12 +251,21 @@ func ProblemConfirmHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusForbidden, "submit with id " + request.ID + " not found", nil)
         return
     }
+    if submit.Confirm == model.SubmitConfirmed {
+        util.ErrorResponse(context, http.StatusForbidden, "submit has been confirmed", nil)
+        return
+    }
     if submit.User != contestID {
         util.ErrorResponse(context, http.StatusForbidden, "can not confirm other's submission", nil)
         return
     }
 
     problem, _ := config.GetProblemConfig(submit.ProblemID)
+    err = os.MkdirAll(util.GetSourcePath(contestID, problem.Filename), os.ModePerm)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        return
+    }
     if problem.Type != config.ProblemAnswer {
         data, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + "code")
         if err != nil {

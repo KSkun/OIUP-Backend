@@ -30,6 +30,7 @@ type MD5Info struct {
 func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
     addCodeSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
+    defer addCodeSubmitQuery.Close()
     _, err := addCodeSubmitQuery.Exec(submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed)
     return err
 }
@@ -42,6 +43,7 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
 
     addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
+    defer addOutputSubmitQuery.Close()
     _, err = addOutputSubmitQuery.Exec(submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed)
     return err
 }
@@ -49,7 +51,9 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
 func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     getSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableSubmit +
         " WHERE id = ?")
+    defer getSubmitQuery.Close()
     rows, err := getSubmitQuery.Query(submitID)
+    defer rows.Close()
     if err != nil {
         return SubmitInfo{}, false, err
     }
@@ -81,7 +85,9 @@ type LatestSubmitInfo struct {
 func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
     getLatestSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
+    defer getLatestSubmitQuery.Close()
     rows, err := getLatestSubmitQuery.Query(user, problemID)
+    defer rows.Close()
     if err != nil {
         return SubmitInfo{}, false, err
     }
@@ -110,9 +116,16 @@ func ConfirmSubmit(submitID string) error {
     if !found {
         return errors.New("submit with id " + submitID + " not found")
     }
-
+    /*
+       Note of SQL Error: database is locked
+       Causes:
+         1) 'rows' in other queries remain open after operation
+         2) DataGrip and DB Browser connections keep alive
+       The 2 causes locks the db and UPDATE event meets a timed-out error.
+     */
     confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
+    defer confirmSubmitQuery.Close()
     _, err = confirmSubmitQuery.Exec(SubmitConfirmed, submitID)
     if err != nil {
         return err
@@ -120,6 +133,7 @@ func ConfirmSubmit(submitID string) error {
 
     deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
+    defer deleteLatestSubmitQuery.Close()
     _, err = deleteLatestSubmitQuery.Exec(submit.User, submit.ProblemID)
     if err != nil {
         return err
@@ -127,6 +141,7 @@ func ConfirmSubmit(submitID string) error {
 
     addLatestSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
         " VALUES (?, ?, ?)")
+    defer addLatestSubmitQuery.Close()
     _, err = addLatestSubmitQuery.Exec(submit.User, submitID, submit.ProblemID)
     return err
 }
