@@ -27,6 +27,7 @@ type DBConfig struct {
 	TableUser		   string	     `json:"table_user"`
 	TableSubmit 	   string	     `json:"table_submit"`
 	TableLatestSubmit  string        `json:"table_latest_submit"`
+	WriteCheckGap      int           `json:"write_check_gap"`  // Unit: Microsecond
 }
 
 type FileConfig struct {

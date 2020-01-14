@@ -30,8 +30,11 @@ type MD5Info struct {
 func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
     addCodeSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    defer addCodeSubmitQuery.Close()
-    _, err := addCodeSubmitQuery.Exec(submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed)
+    writeCh <- DBWriteQuery{
+        Stmt:       addCodeSubmitQuery,
+        Parameters: []interface{}{submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed},
+    }
+    err := <-errCh
     return err
 }
 
@@ -43,8 +46,11 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
 
     addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    defer addOutputSubmitQuery.Close()
-    _, err = addOutputSubmitQuery.Exec(submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed)
+    writeCh <- DBWriteQuery{
+        Stmt:       addOutputSubmitQuery,
+        Parameters: []interface{}{submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed},
+    }
+    err = <-errCh
     return err
 }
 
@@ -128,23 +134,32 @@ func ConfirmSubmit(submitID string) error {
      */
     confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
-    defer confirmSubmitQuery.Close()
-    _, err = confirmSubmitQuery.Exec(SubmitConfirmed, submitID)
+    writeCh <- DBWriteQuery{
+        Stmt:       confirmSubmitQuery,
+        Parameters: []interface{}{SubmitConfirmed, submitID},
+    }
+    err = <-errCh
     if err != nil {
         return err
     }
 
     deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
-    defer deleteLatestSubmitQuery.Close()
-    _, err = deleteLatestSubmitQuery.Exec(submit.User, submit.ProblemID)
+    writeCh <- DBWriteQuery{
+        Stmt:       deleteLatestSubmitQuery,
+        Parameters: []interface{}{submit.User, submit.ProblemID},
+    }
+    err = <-errCh
     if err != nil {
         return err
     }
 
     addLatestSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
         " VALUES (?, ?, ?)")
-    defer addLatestSubmitQuery.Close()
-    _, err = addLatestSubmitQuery.Exec(submit.User, submitID, submit.ProblemID)
+    writeCh <- DBWriteQuery{
+        Stmt:       addLatestSubmitQuery,
+        Parameters: []interface{}{submit.User, submitID, submit.ProblemID},
+    }
+    err = <-errCh
     return err
 }

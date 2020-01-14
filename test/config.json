@@ -12,7 +12,8 @@
     "db_file": "data.db",
     "table_user": "user",
     "table_submit": "submit",
-    "table_latest_submit": "latest_submit"
+    "table_latest_submit": "latest_submit",
+    "write_check_gap": 100
   },
   "file": {
     "directory_upload": "upload",

@@ -25,16 +25,22 @@ type UserInfo struct {
 func AddUser(user UserInfo) error {
     addUserQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableUser +
         " VALUES (?, ?, ?, ?, ?)")
-    defer addUserQuery.Close()
-    _, err := addUserQuery.Exec(user.Name, user.School, user.ContestID, user.PersonID, user.Language)
+    writeCh <- DBWriteQuery{
+        Stmt:       addUserQuery,
+        Parameters: []interface{}{user.Name, user.School, user.ContestID, user.PersonID, user.Language},
+    }
+    err := <-errCh
     return err
 }
 
 func DeleteUser(contestID string) error {
     deleteUserQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableUser +
         " WHERE contest_id = ?")
-    defer deleteUserQuery.Close()
-    _, err := deleteUserQuery.Exec(contestID)
+    writeCh <- DBWriteQuery{
+        Stmt:       deleteUserQuery,
+        Parameters: []interface{}{contestID},
+    }
+    err := <-errCh
     return err
 }
 
@@ -59,7 +65,10 @@ func GetUser(contestID string) (UserInfo, bool, error) {
 func UpdateUser(user UserInfo) error {
     updateUserQuery, _ := db.Prepare("UPDATE "  + config.Config.DB.TableUser +
         " SET name = ?, school = ?, person_id = ?, language = ? WHERE contest_id = ?")
-    defer updateUserQuery.Close()
-    _, err := updateUserQuery.Exec(user.Name, user.School, user.PersonID, user.Language, user.ContestID)
+    writeCh <- DBWriteQuery{
+        Stmt:       updateUserQuery,
+        Parameters: []interface{}{user.Name, user.School, user.PersonID, user.Language, user.ContestID},
+    }
+    err := <-errCh
     return err
 }
