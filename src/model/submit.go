@@ -122,6 +122,9 @@ func ConfirmSubmit(submitID string) error {
          1) 'rows' in other queries remain open after operation
          2) DataGrip and DB Browser connections keep alive
        The 2 causes locks the db and UPDATE event meets a timed-out error.
+       Links:
+         - https://www.jianshu.com/p/54a76cb84bf5
+         - https://blog.csdn.net/LOVETEDA/article/details/82690498
      */
     confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
