@@ -4,3 +4,4 @@ src/go.sum
 design
 test/source
 test/upload
+test/access.log

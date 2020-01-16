@@ -1,3 +1,7 @@
+/*
+   OIUP-Backend Project is developed by KSkun and licensed under GPL-3.0.
+   Copyright (c) KSkun, 2020
+*/
 package util
 
 import (

@@ -35,7 +35,25 @@ func doSQLWriteQuery() {
 }
 
 func init() {
-    db, _ = sql.Open("sqlite3", config.Config.DB.DBFile)
+    _db, err := sql.Open("sqlite3", config.Config.DB.DBFile)
+    if err != nil {
+        panic(err)
+    }
+    db = _db
+
+    // Init database
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS user(name TEXT, school TEXT, contest_id TEXT, person_id TEXT, language INTEGER)")
+    if err != nil {
+        panic(err)
+    }
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS submit(id TEXT, user TEXT, md5 TEXT, time INTEGER, problem_id INTEGER, confirm INTEGER)")
+    if err != nil {
+        panic(err)
+    }
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS latest_submit(user TEXT, submit_id TEXT, problem_id INTEGER)")
+    if err != nil {
+        panic(err)
+    }
 
     writeCh = make(chan DBWriteQuery)
     errCh = make(chan error)

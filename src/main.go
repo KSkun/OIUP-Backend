@@ -8,10 +8,18 @@ import (
 	"OIUP-Backend/config"
 	"OIUP-Backend/view"
 	"github.com/gin-gonic/gin"
+	"io"
+	"os"
 	"strconv"
 )
 
 func main() {
+	logFile, err := os.Create(config.Config.HTTP.AccessLog)
+	if err != nil {
+		panic(err)
+	}
+	gin.DefaultWriter = io.MultiWriter(logFile)
+
 	router := gin.Default()
 	apiGroup := router.Group("/api/v1")
 
@@ -27,5 +35,8 @@ func main() {
 	miscGroup := apiGroup.Group("")
 	view.InitMiscView(miscGroup)
 
-	_ = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
+	err = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
+	if err != nil {
+		panic(err)
+	}
 }

@@ -45,7 +45,3 @@ func ValidateJWTToken(context *gin.Context, secret []byte) {
 func ValidateUserToken(context *gin.Context) {
 	ValidateJWTToken(context, []byte(config.Config.JWT.JWTUserSecret))
 }
-
-func ValidateBackstageToken(context *gin.Context) {
-	ValidateJWTToken(context, []byte(config.Config.JWT.JWTBackstageSecret))
-}
