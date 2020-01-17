@@ -8,7 +8,6 @@ import (
     "OIUP-Backend/config"
     "database/sql"
     _ "github.com/mattn/go-sqlite3"
-    "time"
 )
 
 var db *sql.DB
@@ -18,19 +17,21 @@ type DBWriteQuery struct {
     Parameters []interface{}
 }
 
-var writeCh chan DBWriteQuery
+var queryCh chan DBWriteQuery
 var errCh chan error
 
-func doSQLWriteQuery() {
+func doSQLWrite(query DBWriteQuery) error {
+    _, err := query.Stmt.Exec(query.Parameters...)
+    if err != nil {
+        return err
+    }
+    return query.Stmt.Close()
+}
+
+func asyncSQLWrite() {
     for {
-        select {
-        case query := <-writeCh:
-            _, err := query.Stmt.Exec(query.Parameters...)
-            errCh <-err
-            query.Stmt.Close()
-        default:
-            time.Sleep(time.Duration(config.Config.DB.WriteCheckGap) * time.Millisecond)
-        }
+        query := <-queryCh
+        errCh <-doSQLWrite(query)
     }
 }
 
@@ -42,20 +43,23 @@ func init() {
     db = _db
 
     // Init database
-    _, err = db.Exec("CREATE TABLE IF NOT EXISTS user(name TEXT, school TEXT, contest_id TEXT, person_id TEXT, language INTEGER)")
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS " + config.Config.DB.TableUser +
+        "(name TEXT, school TEXT, contest_id TEXT, person_id TEXT, language INTEGER)")
     if err != nil {
         panic(err)
     }
-    _, err = db.Exec("CREATE TABLE IF NOT EXISTS submit(id TEXT, user TEXT, md5 TEXT, time INTEGER, problem_id INTEGER, confirm INTEGER)")
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS " + config.Config.DB.TableSubmit +
+        "(id TEXT, user TEXT, md5 TEXT, time INTEGER, problem_id INTEGER, confirm INTEGER)")
     if err != nil {
         panic(err)
     }
-    _, err = db.Exec("CREATE TABLE IF NOT EXISTS latest_submit(user TEXT, submit_id TEXT, problem_id INTEGER)")
+    _, err = db.Exec("CREATE TABLE IF NOT EXISTS " + config.Config.DB.TableLatestSubmit +
+        "(user TEXT, submit_id TEXT, problem_id INTEGER)")
     if err != nil {
         panic(err)
     }
 
-    writeCh = make(chan DBWriteQuery)
-    errCh = make(chan error)
-    go doSQLWriteQuery()
+    queryCh = make(chan DBWriteQuery, config.Config.DB.ChannelBuffer)
+    errCh = make(chan error, config.Config.DB.ChannelBuffer)
+    go asyncSQLWrite()
 }

@@ -28,9 +28,5 @@ func NewJWTToken(sub string, aud string, secret []byte) (string, error) {
 }
 
 func NewUserJWTToken(id string) (string, error) {
-	return NewJWTToken("OIUP User Token", id, []byte(config.Config.JWT.JWTUserSecret))
-}
-
-func NewBackstageJWTToken(username string) (string, error) {
-	return NewJWTToken("OIUP Backstage Token", username, []byte(config.Config.JWT.JWTBackstageSecret))
+	return NewJWTToken("OIUP User Token", id, []byte(config.Config.JWT.JWTSecret))
 }

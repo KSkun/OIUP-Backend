@@ -34,7 +34,7 @@ type MD5Info struct {
 func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
     addCodeSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    writeCh <- DBWriteQuery{
+    queryCh <- DBWriteQuery{
         Stmt:       addCodeSubmitQuery,
         Parameters: []interface{}{submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed},
     }
@@ -50,7 +50,7 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
 
     addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
-    writeCh <- DBWriteQuery{
+    queryCh <- DBWriteQuery{
         Stmt:       addOutputSubmitQuery,
         Parameters: []interface{}{submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed},
     }
@@ -138,7 +138,7 @@ func ConfirmSubmit(submitID string) error {
      */
     confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
-    writeCh <- DBWriteQuery{
+    queryCh <- DBWriteQuery{
         Stmt:       confirmSubmitQuery,
         Parameters: []interface{}{SubmitConfirmed, submitID},
     }
@@ -149,7 +149,7 @@ func ConfirmSubmit(submitID string) error {
 
     deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
-    writeCh <- DBWriteQuery{
+    queryCh <- DBWriteQuery{
         Stmt:       deleteLatestSubmitQuery,
         Parameters: []interface{}{submit.User, submit.ProblemID},
     }
@@ -160,7 +160,7 @@ func ConfirmSubmit(submitID string) error {
 
     addLatestSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
         " VALUES (?, ?, ?)")
-    writeCh <- DBWriteQuery{
+    queryCh <- DBWriteQuery{
         Stmt:       addLatestSubmitQuery,
         Parameters: []interface{}{submit.User, submitID, submit.ProblemID},
     }

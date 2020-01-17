@@ -35,6 +35,9 @@ func main() {
 	miscGroup := apiGroup.Group("")
 	view.InitMiscView(miscGroup)
 
+	adminGroup := apiGroup.Group("/admin")
+	view.InitAdminView(adminGroup)
+
 	err = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 	if err != nil {
 		panic(err)

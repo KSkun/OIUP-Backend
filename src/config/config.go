@@ -6,6 +6,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"time"
@@ -19,17 +20,16 @@ type HTTPConfig struct {
 
 type JWTConfig struct {
 	JWTSigningMethod   string	     `json:"signing_method"`
-	JWTUserSecret      string 	     `json:"secret_user"`
-	JWTBackstageSecret string 	     `json:"secret_backstage"`
+	JWTSecret      string 	         `json:"secret"`
 	JWTTokenLife       int           `json:"token_life"`       // Unit: Minute
 }
 
 type DBConfig struct {
 	DBFile			   string        `json:"db_file"`
-	TableUser		   string	     `json:"table_user"`
-	TableSubmit 	   string	     `json:"table_submit"`
-	TableLatestSubmit  string        `json:"table_latest_submit"`
-	WriteCheckGap      int           `json:"write_check_gap"`  // Unit: Microsecond
+	TableUser		   string
+	TableSubmit 	   string
+	TableLatestSubmit  string
+	ChannelBuffer      int           `json:"channel_buffer"`
 }
 
 type FileConfig struct {
@@ -83,29 +83,51 @@ type ConfigObject struct {
 
 var Config ConfigObject
 
-func init() {
-	configFile, _ := ioutil.ReadFile("config.json")
-	err := json.Unmarshal(configFile, &Config)
-	if err != nil {
-		panic(err)
+func ApplyConfig(configObj ConfigObject) error {
+	configObj.DB.TableUser = "user"
+	configObj.DB.TableSubmit = "submit"
+	configObj.DB.TableLatestSubmit = "latest_submit"
+
+	configObj.Contest.Problems = make(ProblemMap, 0)
+	for _, problem := range configObj.Contest.ProblemSet {
+		configObj.Contest.Problems[problem.ID] = problem
 	}
 
-	Config.Contest.Problems = make(ProblemMap, 0)
-	for _, problem := range Config.Contest.ProblemSet {
-		Config.Contest.Problems[problem.ID] = problem
-	}
-
-	startTime, err := time.ParseInLocation("2006-01-02 15:04", Config.Contest.StartTimeStr, time.Local)
+	startTime, err := time.ParseInLocation("2006-01-02 15:04", configObj.Contest.StartTimeStr, time.Local)
 	if err != nil {
-		panic("config error: invalid start_time, " + err.Error())
+		return errors.New("config error: invalid start_time, " + err.Error())
 	}
-	Config.Contest.StartTime = startTime
+	configObj.Contest.StartTime = startTime
+
+	Config = configObj
+	return nil
 }
 
-func SaveConfig() {
-	configJSON, _ := json.Marshal(Config)
-	_ = os.Rename("config.json", "config-" + time.Now().String() + ".json.bak")
-	_ = ioutil.WriteFile("config.json", configJSON, os.ModePerm)
+func LoadConfig() error {
+	var configObj ConfigObject
+
+	configFile, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(configFile, &configObj)
+	if err != nil {
+		return err
+	}
+
+	return ApplyConfig(configObj)
+}
+
+func SaveConfig() error {
+	configJSON, err := json.MarshalIndent(Config, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.Rename("config.json", "config-" + time.Now().Format("200601021504") + ".json.bak")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("config.json", configJSON, os.ModePerm)
 }
 
 func GetProblemConfig(problemID int) (ProblemInfo, bool) {
@@ -114,4 +136,11 @@ func GetProblemConfig(problemID int) (ProblemInfo, bool) {
 		return ProblemInfo{}, false
 	}
 	return problem, true
+}
+
+func init() {
+	err := LoadConfig()
+	if err != nil {
+		panic(err)
+	}
 }
