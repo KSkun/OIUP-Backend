@@ -14,7 +14,6 @@ import (
 
 type HTTPConfig struct {
 	Port      		   int  	     `json:"port"`
-	AccessLog          string        `json:"access_log"`
 	BackstageKey       string        `json:"backstage_key"`
 }
 
@@ -30,6 +29,7 @@ type DBConfig struct {
 	TableSubmit 	   string
 	TableLatestSubmit  string
 	ChannelBuffer      int           `json:"channel_buffer"`
+	RecordsPerPage     int           `json:"records_per_page"`
 }
 
 type FileConfig struct {

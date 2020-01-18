@@ -11,10 +11,8 @@
   },
   "db": {
     "db_file": "data.db",
-    "TableUser": "user",
-    "TableSubmit": "submit",
-    "TableLatestSubmit": "latest_submit",
-    "channel_buffer": 1000
+    "channel_buffer": 1000,
+    "records_per_page": 20
   },
   "file": {
     "directory_upload": "upload",

@@ -8,6 +8,7 @@ import (
     "OIUP-Backend/config"
     "encoding/json"
     "errors"
+    "strconv"
     "time"
 )
 
@@ -32,13 +33,16 @@ type MD5Info struct {
 }
 
 func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
-    addCodeSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
+    addCodeSubmitQuery, err := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
+    if err != nil {
+        return err
+    }
     queryCh <- DBWriteQuery{
         Stmt:       addCodeSubmitQuery,
         Parameters: []interface{}{submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed},
     }
-    err := <-errCh
+    err = <-errCh
     return err
 }
 
@@ -48,8 +52,11 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
         return err
     }
 
-    addOutputSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
+    addOutputSubmitQuery, err := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
+    if err != nil {
+        return err
+    }
     queryCh <- DBWriteQuery{
         Stmt:       addOutputSubmitQuery,
         Parameters: []interface{}{submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed},
@@ -59,8 +66,11 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
 }
 
 func GetSubmit(submitID string) (SubmitInfo, bool, error) {
-    getSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableSubmit +
+    getSubmitQuery, err := db.Prepare("SELECT * FROM " + config.Config.DB.TableSubmit +
         " WHERE id = ?")
+    if err != nil {
+        return SubmitInfo{}, false, err
+    }
     defer getSubmitQuery.Close()
     rows, err := getSubmitQuery.Query(submitID)
     defer rows.Close()
@@ -75,7 +85,10 @@ func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     err = rows.Scan(&submit.ID, &submit.User, &submit.MD5, &submit.Time, &submit.ProblemID, &submit.Confirm)
 
     // MD5Info array unmarshal
-    problemConfig, _ := config.GetProblemConfig(submit.ProblemID)
+    problemConfig, found := config.GetProblemConfig(submit.ProblemID)
+    if !found {
+        return SubmitInfo{}, false, errors.New("problem with id " + strconv.Itoa(submit.ProblemID) + " not found")
+    }
     if problemConfig.Type == config.ProblemAnswer {
         err = json.Unmarshal([]byte(submit.MD5), &submit.MD5Set)
         if err != nil {
@@ -93,8 +106,11 @@ type LatestSubmitInfo struct {
 }
 
 func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
-    getLatestSubmitQuery, _ := db.Prepare("SELECT * FROM " + config.Config.DB.TableLatestSubmit +
+    getLatestSubmitQuery, err := db.Prepare("SELECT * FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
+    if err != nil {
+        return SubmitInfo{}, false, err
+    }
     defer getLatestSubmitQuery.Close()
     rows, err := getLatestSubmitQuery.Query(user, problemID)
     defer rows.Close()
@@ -136,8 +152,11 @@ func ConfirmSubmit(submitID string) error {
          - https://www.jianshu.com/p/54a76cb84bf5
          - https://blog.csdn.net/LOVETEDA/article/details/82690498
      */
-    confirmSubmitQuery, _ := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
+    confirmSubmitQuery, err := db.Prepare("UPDATE " + config.Config.DB.TableSubmit +
         " SET confirm = ? WHERE id = ?")
+    if err != nil {
+        return err
+    }
     queryCh <- DBWriteQuery{
         Stmt:       confirmSubmitQuery,
         Parameters: []interface{}{SubmitConfirmed, submitID},
@@ -147,8 +166,11 @@ func ConfirmSubmit(submitID string) error {
         return err
     }
 
-    deleteLatestSubmitQuery, _ := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
+    deleteLatestSubmitQuery, err := db.Prepare("DELETE FROM " + config.Config.DB.TableLatestSubmit +
         " WHERE user = ? AND problem_id = ?")
+    if err != nil {
+        return err
+    }
     queryCh <- DBWriteQuery{
         Stmt:       deleteLatestSubmitQuery,
         Parameters: []interface{}{submit.User, submit.ProblemID},
@@ -158,8 +180,11 @@ func ConfirmSubmit(submitID string) error {
         return err
     }
 
-    addLatestSubmitQuery, _ := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
+    addLatestSubmitQuery, err := db.Prepare("INSERT INTO " + config.Config.DB.TableLatestSubmit +
         " VALUES (?, ?, ?)")
+    if err != nil {
+        return err
+    }
     queryCh <- DBWriteQuery{
         Stmt:       addLatestSubmitQuery,
         Parameters: []interface{}{submit.User, submitID, submit.ProblemID},

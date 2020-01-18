@@ -14,5 +14,12 @@ func InitAdminView(group *gin.RouterGroup) {
     configGroup.PUT("", admin.AdminModifyConfigHandler)
     configGroup.POST("/reload", admin.AdminReloadConfigHandler)
 
-    // TODO 选手和提交记录
+    userGroup := group.Group("/user")
+    userGroup.GET("", admin.AdminSearchUserHandler)
+    userGroup.POST("", admin.AdminAddUserHandler)
+    userGroup.PUT("", admin.AdminUpdateUserHandler)
+    userGroup.DELETE("", admin.AdminDeleteUserHandler)
+    userGroup.POST("/csv", admin.AdminImportUsersHandler)
+
+    // TODO 提交记录
 }

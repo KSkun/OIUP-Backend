@@ -11,10 +11,15 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
-	logFile, err := os.Create(config.Config.HTTP.AccessLog)
+	err := os.MkdirAll("logs/", os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	logFile, err := os.Create("logs/access-" + time.Now().Format("200601021504") + ".log")
 	if err != nil {
 		panic(err)
 	}
