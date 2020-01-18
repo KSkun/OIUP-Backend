@@ -73,10 +73,10 @@ func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     }
     defer getSubmitQuery.Close()
     rows, err := getSubmitQuery.Query(submitID)
-    defer rows.Close()
     if err != nil {
         return SubmitInfo{}, false, err
     }
+    defer rows.Close()
 
     var submit SubmitInfo
     if !rows.Next() {
@@ -113,10 +113,10 @@ func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
     }
     defer getLatestSubmitQuery.Close()
     rows, err := getLatestSubmitQuery.Query(user, problemID)
-    defer rows.Close()
     if err != nil {
         return SubmitInfo{}, false, err
     }
+    defer rows.Close()
 
     var latestSubmit LatestSubmitInfo
     if !rows.Next() {

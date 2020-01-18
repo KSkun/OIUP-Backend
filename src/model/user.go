@@ -77,10 +77,10 @@ func GetUser(contestID string) (UserInfo, bool, error) {
     defer getUserQuery.Close()
     var user UserInfo
     rows, err := getUserQuery.Query(contestID)
-    defer rows.Close()
     if err != nil {
         return user, false, err
     }
+    defer rows.Close()
 
     if !rows.Next() {
         return user, false, nil
@@ -104,29 +104,8 @@ func getSQLConditionsStr(filters map[string]interface{}) string {
     return str
 }
 
-func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, error) {
+func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, int, error) {
     conditionsStr := getSQLConditionsStr(filters)
-
-    searchUserSubQueryStr := "SELECT contest_id FROM " + config.Config.DB.TableUser
-    if len(conditionsStr) > 0 {
-        searchUserSubQueryStr += " WHERE " + conditionsStr
-    }
-    searchUserSubQueryStr += " ORDER BY contest_id LIMIT " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * (page - 1))
-
-    searchUserQueryStr := "SELECT * FROM " + config.Config.DB.TableUser +
-        " WHERE contest_id NOT IN (" + searchUserSubQueryStr + ")"
-    if len(conditionsStr) > 0 {
-        searchUserQueryStr += " AND " + conditionsStr
-    }
-    searchUserQueryStr += " ORDER BY contest_id LIMIT " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * page)
-
-    searchUserQuery, err := db.Prepare(searchUserQueryStr)
-    if err != nil {
-        return nil, err
-    }
-    defer searchUserQuery.Close()
     values := make([]interface{}, 0)
     for key, value := range filters {
         if key == "language" {
@@ -135,23 +114,56 @@ func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, error) {
         }
         values = append(values, value.(string) + "%")
     }
-    values = append(values, values...)
-    rows, err := searchUserQuery.Query(values...)
-    defer rows.Close()
-    if err != nil {
-        return nil, err
+
+    var count int
+    countUserQueryStr := "SELECT COUNT(*) FROM " + config.Config.DB.TableUser
+    if len(conditionsStr) > 0 {
+        countUserQueryStr += " WHERE " + conditionsStr
     }
+    countUserQuery, err := db.Prepare(countUserQueryStr)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer countUserQuery.Close()
+    countRows, err := countUserQuery.Query(values...)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer countRows.Close()
+    countRows.Next()
+    err = countRows.Scan(&count)
+    if err != nil {
+        return nil, 0, err
+    }
+
+    searchUserQueryStr := "SELECT * FROM " + config.Config.DB.TableUser
+    if len(conditionsStr) > 0 {
+        searchUserQueryStr += " WHERE " + conditionsStr
+    }
+    searchUserQueryStr += " ORDER BY contest_id LIMIT " +
+        strconv.Itoa(config.Config.DB.RecordsPerPage * page) + " OFFSET " +
+        strconv.Itoa(config.Config.DB.RecordsPerPage * (page - 1))
+    searchUserQuery, err := db.Prepare(searchUserQueryStr)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer searchUserQuery.Close()
+    rows, err := searchUserQuery.Query(values...)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer rows.Close()
 
     users := make([]UserInfo, 0)
     for rows.Next() {
         var user UserInfo
         err = rows.Scan(&user.Name, &user.School, &user.ContestID, &user.PersonID, &user.Language)
         if err != nil {
-            return nil, err
+            return nil, 0, err
         }
         users = append(users, user)
     }
-    return users, nil
+    return users, count, nil
 }
 
 func UpdateUser(user UserInfo) error {
