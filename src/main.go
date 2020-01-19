@@ -6,6 +6,7 @@ package main
 
 import (
 	"OIUP-Backend/config"
+	"OIUP-Backend/middleware"
 	"OIUP-Backend/view"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -27,6 +28,7 @@ func main() {
 
 	router := gin.Default()
 	apiGroup := router.Group("/api/v1")
+	apiGroup.Use(middleware.CrossOriginMiddleware)
 
 	userGroup := apiGroup.Group("/user")
 	view.InitUserView(userGroup)
