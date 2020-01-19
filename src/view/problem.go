@@ -15,7 +15,6 @@ func InitProblemView(group *gin.RouterGroup) {
 
     group.GET("/list", controller.ProblemListHandler)
     group.GET("/status", controller.ProblemStatusHandler)
-    group.GET("/info", controller.ProblemInfoHandler)
     group.GET("/latest", controller.ProblemLatestHandler)
 
     solutionGroup := group.Group("/solution")

@@ -19,14 +19,6 @@ import (
     "time"
 )
 
-func ProblemListHandler(context *gin.Context) {
-    response := make([]gin.H, 0)
-    for _, problem := range config.Config.Contest.Problems {
-        response = append(response, gin.H{"id": problem.ID, "filename": problem.Filename})
-    }
-    util.SuccessResponse(context, response)
-}
-
 type RequestProblemID struct {
     ID int `form:"id" binding:"required"`
 }
@@ -54,19 +46,8 @@ func ProblemStatusHandler(context *gin.Context) {
     util.SuccessResponse(context, gin.H{"is_submit": found})
 }
 
-func ProblemInfoHandler(context *gin.Context) {
-    var request RequestProblemID
-    if err := context.Bind(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
-        return
-    }
-    problem, found := config.GetProblemConfig(request.ID)
-    if !found {
-        util.ErrorResponse(context, http.StatusForbidden,
-            "problem with id " + strconv.Itoa(request.ID) + " not found", nil)
-        return
-    }
-    util.SuccessResponse(context, problem)
+func ProblemListHandler(context *gin.Context) {
+    util.SuccessResponse(context, gin.H{"problems": config.Config.Contest.ProblemSet})
 }
 
 func ProblemLatestHandler(context *gin.Context) {
