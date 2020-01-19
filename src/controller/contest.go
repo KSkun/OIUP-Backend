@@ -19,30 +19,33 @@ const (
     ContestStatusError     = -1
 )
 
-func getContestStatus() (int, error) {
+func getContestStatus() int {
     if config.Config.Contest.Status == config.ContestStatusError {
-        return ContestStatusError, nil
+        return ContestStatusError
     }
 
     startTime := config.Config.Contest.StartTime
     nowTime := time.Now()
     if nowTime.Before(startTime) {
-        return ContestStatusPreparing, nil
+        return ContestStatusPreparing
     }
-    if nowTime.After(startTime.Add(time.Hour * time.Duration(config.Config.Contest.Duration))) {
-        return ContestStatusEnd, nil
+    if nowTime.After(startTime.Add(time.Minute * time.Duration(config.Config.Contest.Duration * 60))) {
+        return ContestStatusEnd
     }
-    return ContestStatusRunning, nil
+    return ContestStatusRunning
 }
 
 func ContestStatusHandler(context *gin.Context) {
-    status, err := getContestStatus()
-    if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
-        return
-    }
+    status := getContestStatus()
 
-    response := gin.H{"status": status, "message": ""}
+    startTime := config.Config.Contest.StartTime
+    endTime := startTime.Add(time.Minute * time.Duration(config.Config.Contest.Duration * 60))
+    response := gin.H{
+        "status":     status,
+        "start_time": startTime.Unix(),
+        "end_time":   endTime.Unix(),
+        "message":    "",
+    }
     if status == ContestStatusError {
         response["message"] = config.Config.Contest.Message
     }

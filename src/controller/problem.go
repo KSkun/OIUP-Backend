@@ -118,6 +118,10 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
         return
     }
+    if getContestStatus() != ContestStatusRunning {
+        util.ErrorResponse(context, http.StatusForbidden, "disallowed submit time", nil)
+        return
+    }
 
     problem, found := config.GetProblemConfig(request.ID)
     if !found {
@@ -174,6 +178,10 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
     var request RequestOutput
     if err := context.BindJSON(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        return
+    }
+    if getContestStatus() != ContestStatusRunning {
+        util.ErrorResponse(context, http.StatusForbidden, "disallowed submit time", nil)
         return
     }
 
