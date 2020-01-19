@@ -18,21 +18,21 @@ const (
 )
 
 type SubmitInfo struct {
-    ID        string    `json:"id"`
-    User      string    `json:"user"`
-    MD5       string    `json:"md5"`
-    MD5Set    []MD5Info `json:"-"`
-    Time      int       `json:"time"`
-    ProblemID int       `json:"problem_id"`
-    Confirm   int       `json:"confirm"`
+    ID        string     `json:"id"`
+    User      string     `json:"user"`
+    Hash      string     `json:"hash"`
+    HashSet   []HashInfo `json:"-"`
+    Time      int        `json:"time"`
+    ProblemID int        `json:"problem_id"`
+    Confirm   int        `json:"confirm"`
 }
 
-type MD5Info struct {
-    MD5    string `json:"md5"`
+type HashInfo struct {
+    Hash   string `json:"hash"`
     TestID int    `json:"test_id"`
 }
 
-func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, problemID int) error {
+func AddCodeSubmit(submitID string, user string, hash string, time time.Time, problemID int) error {
     addCodeSubmitQuery, err := db.Prepare("INSERT INTO " + config.Config.DB.TableSubmit +
         " VALUES (?, ?, ?, ?, ?, ?)")
     if err != nil {
@@ -40,14 +40,14 @@ func AddCodeSubmit(submitID string, user string, md5 string, time time.Time, pro
     }
     queryCh <- DBWriteQuery{
         Stmt:       addCodeSubmitQuery,
-        Parameters: []interface{}{submitID, user, md5, time.Unix(), problemID, SubmitUnconfirmed},
+        Parameters: []interface{}{submitID, user, hash, time.Unix(), problemID, SubmitUnconfirmed},
     }
     err = <-errCh
     return err
 }
 
-func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.Time, problemID int) error {
-    md5JSON, err := json.Marshal(md5Set)
+func AddOutputSubmit(submitID string, user string, hashSet []HashInfo, time time.Time, problemID int) error {
+    hashJSON, err := json.Marshal(hashSet)
     if err != nil {
         return err
     }
@@ -59,7 +59,7 @@ func AddOutputSubmit(submitID string, user string, md5Set []MD5Info, time time.T
     }
     queryCh <- DBWriteQuery{
         Stmt:       addOutputSubmitQuery,
-        Parameters: []interface{}{submitID, user, md5JSON, time.Unix(), problemID, SubmitUnconfirmed},
+        Parameters: []interface{}{submitID, user, hashJSON, time.Unix(), problemID, SubmitUnconfirmed},
     }
     err = <-errCh
     return err
@@ -82,15 +82,15 @@ func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     if !rows.Next() {
         return submit, false, nil
     }
-    err = rows.Scan(&submit.ID, &submit.User, &submit.MD5, &submit.Time, &submit.ProblemID, &submit.Confirm)
+    err = rows.Scan(&submit.ID, &submit.User, &submit.Hash, &submit.Time, &submit.ProblemID, &submit.Confirm)
 
-    // MD5Info array unmarshal
+    // HashInfo array unmarshal
     problemConfig, found := config.GetProblemConfig(submit.ProblemID)
     if !found {
         return SubmitInfo{}, false, errors.New("problem with id " + strconv.Itoa(submit.ProblemID) + " not found")
     }
     if problemConfig.Type == config.ProblemAnswer {
-        err = json.Unmarshal([]byte(submit.MD5), &submit.MD5Set)
+        err = json.Unmarshal([]byte(submit.Hash), &submit.HashSet)
         if err != nil {
             return submit, false, err
         }
@@ -246,7 +246,7 @@ func SearchSubmit(filters map[string]interface{}, page int) ([]SubmitInfo, int, 
     submits := make([]SubmitInfo, 0)
     for rows.Next() {
         var submit SubmitInfo
-        err = rows.Scan(&submit.ID, &submit.User, &submit.MD5, &submit.Time, &submit.ProblemID, &submit.Confirm)
+        err = rows.Scan(&submit.ID, &submit.User, &submit.Hash, &submit.Time, &submit.ProblemID, &submit.Confirm)
         if err != nil {
             return nil, 0, err
         }

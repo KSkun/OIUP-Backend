@@ -8,7 +8,7 @@ import (
     "OIUP-Backend/config"
     "OIUP-Backend/model"
     "OIUP-Backend/util"
-    "crypto/md5"
+    "crypto/sha256"
     "encoding/hex"
     "github.com/gin-gonic/gin"
     uuid "github.com/satori/go.uuid"
@@ -75,9 +75,9 @@ func ProblemLatestHandler(context *gin.Context) {
         return
     }
 
-    response := gin.H{"id": submit.ID, "md5": submit.MD5Set, "data": ""}
+    response := gin.H{"id": submit.ID, "hash": submit.HashSet, "data": ""}
     if problem.Type != config.ProblemAnswer {
-        response["md5"] = submit.MD5
+        response["hash"] = submit.Hash
         file, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + "code")
         if err != nil {
             util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
@@ -130,9 +130,9 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
     }
 
     user := util.GetIDFromContext(context)
-    md5Res := md5.Sum([]byte(request.Code))
-    md5Str := hex.EncodeToString(md5Res[:])
-    err = model.AddCodeSubmit(submitID.String(), user, md5Str, time.Now(), request.ID)
+    hashRes := sha256.Sum256([]byte(request.Code))
+    hashStr := hex.EncodeToString(hashRes[:])
+    err = model.AddCodeSubmit(submitID.String(), user, hashStr, time.Now(), request.ID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
@@ -140,7 +140,7 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
 
     util.SuccessResponse(context, gin.H{
         "id":   submitID.String(),
-        "md5":  md5Str,
+        "hash":  hashStr,
         "data": request.Code,
     })
 }
@@ -194,13 +194,13 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
     }
 
     user := util.GetIDFromContext(context)
-    md5Set := make([]model.MD5Info, 0)
+    hashSet := make([]model.HashInfo, 0)
     for _, output := range request.Outputs {
-        md5Res := md5.Sum([]byte(output.Output))
-        md5Str := hex.EncodeToString(md5Res[:])
-        md5Set = append(md5Set, model.MD5Info{TestID: output.TestID, MD5: md5Str})
+        hashRes := sha256.Sum256([]byte(output.Output))
+        hashStr := hex.EncodeToString(hashRes[:])
+        hashSet = append(hashSet, model.HashInfo{TestID: output.TestID, Hash: hashStr})
     }
-    err = model.AddOutputSubmit(submitID.String(), user, md5Set, time.Now(), request.ID)
+    err = model.AddOutputSubmit(submitID.String(), user, hashSet, time.Now(), request.ID)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
@@ -208,7 +208,7 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
 
     util.SuccessResponse(context, gin.H{
         "id":   submitID.String(),
-        "md5":  md5Set,
+        "hash":  hashSet,
         "data": "",
     })
 }
@@ -278,14 +278,14 @@ func ProblemConfirmHandler(context *gin.Context) {
         }
     }
     if problem.Type == config.ProblemAnswer {
-        for _, md5Info := range submit.MD5Set {
-            data, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + strconv.Itoa(md5Info.TestID))
+        for _, hashInfo := range submit.HashSet {
+            data, err := ioutil.ReadFile(util.GetUploadPath(submit.ID) + strconv.Itoa(hashInfo.TestID))
             if err != nil {
                 util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
                 return
             }
 
-            err = ioutil.WriteFile(util.GetSourcePath(contestID, problem.Filename) + problem.Filename + strconv.Itoa(md5Info.TestID) + ".out",
+            err = ioutil.WriteFile(util.GetSourcePath(contestID, problem.Filename) + problem.Filename + strconv.Itoa(hashInfo.TestID) + ".out",
                 data, os.ModePerm)
             if err != nil {
                 util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)

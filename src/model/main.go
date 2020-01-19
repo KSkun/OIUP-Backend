@@ -49,7 +49,7 @@ func init() {
         panic(err)
     }
     _, err = db.Exec("CREATE TABLE IF NOT EXISTS " + config.Config.DB.TableSubmit +
-        "(id TEXT, user TEXT, md5 TEXT, time INTEGER, problem_id INTEGER, confirm INTEGER)")
+        "(id TEXT, user TEXT, hash TEXT, time INTEGER, problem_id INTEGER, confirm INTEGER)")
     if err != nil {
         panic(err)
     }

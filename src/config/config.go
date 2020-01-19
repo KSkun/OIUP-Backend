@@ -19,15 +19,15 @@ type HTTPConfig struct {
 
 type JWTConfig struct {
 	JWTSigningMethod   string	     `json:"signing_method"`
-	JWTSecret      string 	         `json:"secret"`
+	JWTSecret          string 	     `json:"secret"`
 	JWTTokenLife       int           `json:"token_life"`       // Unit: Minute
 }
 
 type DBConfig struct {
 	DBFile			   string        `json:"db_file"`
-	TableUser		   string
-	TableSubmit 	   string
-	TableLatestSubmit  string
+	TableUser		   string        `json:"-"`
+	TableSubmit 	   string        `json:"-"`
+	TableLatestSubmit  string        `json:"-"`
 	ChannelBuffer      int           `json:"channel_buffer"`
 	RecordsPerPage     int           `json:"records_per_page"`
 }
@@ -64,7 +64,7 @@ type ContestConfig struct {
 	Status             int           `json:"status"`
 	Message            string        `json:"message"`
 	StartTimeStr	   string        `json:"start_time"`
-	StartTime          time.Time
+	StartTime          time.Time     `json:"-"`
 	Duration           float32       `json:"duration"`      // Unit: Hour
 	Download           string        `json:"download"`
 	UnzipToken         string        `json:"unzip_token"`
