@@ -27,8 +27,8 @@ func main() {
 	gin.DefaultWriter = io.MultiWriter(logFile)
 
 	router := gin.Default()
+	router.Use(middleware.CrossOriginMiddleware)
 	apiGroup := router.Group("/api/v1")
-	apiGroup.Use(middleware.CrossOriginMiddleware)
 
 	userGroup := apiGroup.Group("/user")
 	view.InitUserView(userGroup)
