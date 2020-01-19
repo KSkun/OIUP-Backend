@@ -18,13 +18,13 @@ const (
 )
 
 type SubmitInfo struct {
-    ID        string
-    User      string
-    MD5       string
-    MD5Set    []MD5Info
-    Time      int
-    ProblemID int
-    Confirm   int
+    ID        string    `json:"id"`
+    User      string    `json:"user"`
+    MD5       string    `json:"md5"`
+    MD5Set    []MD5Info `json:"-"`
+    Time      int       `json:"time"`
+    ProblemID int       `json:"problem_id"`
+    Confirm   int       `json:"confirm"`
 }
 
 type MD5Info struct {
@@ -191,4 +191,66 @@ func ConfirmSubmit(submitID string) error {
     }
     err = <-errCh
     return err
+}
+
+func SearchSubmit(filters map[string]interface{}, page int) ([]SubmitInfo, int, error) {
+    conditionsStr := getSQLConditionsStr(filters)
+    values := make([]interface{}, 0)
+    for key, value := range filters {
+        if key == "problem_id" {
+            values = append(values, value)
+            continue
+        }
+        values = append(values, value.(string) + "%")
+    }
+
+    var count int
+    countSubmitQueryStr := "SELECT COUNT(*) FROM " + config.Config.DB.TableSubmit
+    if len(conditionsStr) > 0 {
+        countSubmitQueryStr += " WHERE " + conditionsStr
+    }
+    countSubmitQuery, err := db.Prepare(countSubmitQueryStr)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer countSubmitQuery.Close()
+    countRows, err := countSubmitQuery.Query(values...)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer countRows.Close()
+    countRows.Next()
+    err = countRows.Scan(&count)
+    if err != nil {
+        return nil, 0, err
+    }
+
+    searchSubmitQueryStr := "SELECT * FROM " + config.Config.DB.TableSubmit
+    if len(conditionsStr) > 0 {
+        searchSubmitQueryStr += " WHERE " + conditionsStr
+    }
+    searchSubmitQueryStr += " ORDER BY user LIMIT " +
+        strconv.Itoa(config.Config.DB.RecordsPerPage * page) + " OFFSET " +
+        strconv.Itoa(config.Config.DB.RecordsPerPage * (page - 1))
+    searchSubmitQuery, err := db.Prepare(searchSubmitQueryStr)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer searchSubmitQuery.Close()
+    rows, err := searchSubmitQuery.Query(values...)
+    if err != nil {
+        return nil, 0, err
+    }
+    defer rows.Close()
+
+    submits := make([]SubmitInfo, 0)
+    for rows.Next() {
+        var submit SubmitInfo
+        err = rows.Scan(&submit.ID, &submit.User, &submit.MD5, &submit.Time, &submit.ProblemID, &submit.Confirm)
+        if err != nil {
+            return nil, 0, err
+        }
+        submits = append(submits, submit)
+    }
+    return submits, count, nil
 }

@@ -89,21 +89,6 @@ func GetUser(contestID string) (UserInfo, bool, error) {
     return user, true, nil
 }
 
-func getSQLConditionsStr(filters map[string]interface{}) string {
-    str := ""
-    for key := range filters {
-        if key == "language" {
-            str += key + " = ? AND "
-            continue
-        }
-        str += key + " LIKE ? AND "
-    }
-    if len(filters) != 0 {
-        str = str[0:len(str) - 5]
-    }
-    return str
-}
-
 func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, int, error) {
     conditionsStr := getSQLConditionsStr(filters)
     values := make([]interface{}, 0)

@@ -25,5 +25,6 @@ func InitAdminView(group *gin.RouterGroup) {
     userGroup.DELETE("", admin.AdminDeleteUserHandler)
     userGroup.POST("/csv", admin.AdminImportUsersHandler)
 
-    // TODO 提交记录
+    submitGroup := group.Group("/submit")
+    submitGroup.GET("", admin.AdminSearchSubmitHandler)
 }

@@ -63,3 +63,18 @@ func init() {
     errCh = make(chan error, config.Config.DB.ChannelBuffer)
     go asyncSQLWrite()
 }
+
+func getSQLConditionsStr(filters map[string]interface{}) string {
+    str := ""
+    for key := range filters {
+        if key == "language" || key == "problem_id" {
+            str += key + " = ? AND "
+            continue
+        }
+        str += key + " LIKE ? AND "
+    }
+    if len(filters) != 0 {
+        str = str[0:len(str) - 5]
+    }
+    return str
+}
