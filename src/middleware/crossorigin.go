@@ -13,6 +13,7 @@ func CrossOriginMiddleware(context *gin.Context) {
     context.Header("Access-Control-Allow-Origin", "*")
     context.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
     context.Header("Access-Control-Allow-Credentials", "true")
+    context.Header("Access-Control-Allow-Headers", "Authorization,DNT,User-Agent,Keep-Alive,Content-Type,Accept,Origin,X-Requested-With")
 
     if context.Request.Method == "OPTIONS" {
         context.AbortWithStatus(http.StatusNoContent)
