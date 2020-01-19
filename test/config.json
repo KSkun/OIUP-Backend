@@ -1,7 +1,6 @@
 {
   "http": {
     "port": 8081,
-    "access_log": "access.log",
     "backstage_key": "backstage"
   },
   "jwt": {

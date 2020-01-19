@@ -140,7 +140,7 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
 
     util.SuccessResponse(context, gin.H{
         "id":   submitID.String(),
-        "hash":  hashStr,
+        "hash": hashStr,
         "data": request.Code,
     })
 }
@@ -208,7 +208,7 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
 
     util.SuccessResponse(context, gin.H{
         "id":   submitID.String(),
-        "hash":  hashSet,
+        "hash": hashSet,
         "data": "",
     })
 }
