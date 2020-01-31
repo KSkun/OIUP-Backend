@@ -193,7 +193,7 @@ func ConfirmSubmit(submitID string) error {
     return err
 }
 
-func SearchSubmit(filters map[string]interface{}, page int) ([]SubmitInfo, int, error) {
+func SearchSubmit(filters map[string]interface{}) ([]SubmitInfo, int, error) {
     conditionsStr := getSQLConditionsStr(filters)
     values := make([]interface{}, 0)
     for key, value := range filters {
@@ -229,9 +229,6 @@ func SearchSubmit(filters map[string]interface{}, page int) ([]SubmitInfo, int, 
     if len(conditionsStr) > 0 {
         searchSubmitQueryStr += " WHERE " + conditionsStr
     }
-    searchSubmitQueryStr += " ORDER BY user LIMIT " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * page) + " OFFSET " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * (page - 1))
     searchSubmitQuery, err := db.Prepare(searchSubmitQueryStr)
     if err != nil {
         return nil, 0, err

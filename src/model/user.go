@@ -7,7 +7,6 @@ package model
 import (
     "OIUP-Backend/config"
     "errors"
-    "strconv"
 )
 
 const (
@@ -89,7 +88,7 @@ func GetUser(contestID string) (UserInfo, bool, error) {
     return user, true, nil
 }
 
-func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, int, error) {
+func SearchUser(filters map[string]interface{}) ([]UserInfo, int, error) {
     conditionsStr := getSQLConditionsStr(filters)
     values := make([]interface{}, 0)
     for key, value := range filters {
@@ -125,9 +124,6 @@ func SearchUser(filters map[string]interface{}, page int) ([]UserInfo, int, erro
     if len(conditionsStr) > 0 {
         searchUserQueryStr += " WHERE " + conditionsStr
     }
-    searchUserQueryStr += " ORDER BY contest_id LIMIT " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * page) + " OFFSET " +
-        strconv.Itoa(config.Config.DB.RecordsPerPage * (page - 1))
     searchUserQuery, err := db.Prepare(searchUserQueryStr)
     if err != nil {
         return nil, 0, err

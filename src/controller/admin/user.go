@@ -17,7 +17,6 @@ type RequestSearchUser struct {
     ContestID string `form:"contest_id"`
     PersonID  string `form:"person_id"`
     Language  int    `form:"language"`
-    Page      int    `form:"page" binding:"required"`
 }
 
 func AdminSearchUserHandler(context *gin.Context) {
@@ -44,7 +43,7 @@ func AdminSearchUserHandler(context *gin.Context) {
         filters["language"] = request.Language
     }
 
-    users, count, err := model.SearchUser(filters, request.Page)
+    users, count, err := model.SearchUser(filters)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return

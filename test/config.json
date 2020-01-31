@@ -10,8 +10,7 @@
   },
   "db": {
     "db_file": "data.db",
-    "channel_buffer": 1000,
-    "records_per_page": 20
+    "channel_buffer": 1000
   },
   "file": {
     "directory_upload": "upload",

@@ -12,7 +12,6 @@ import (
 )
 
 type RequestSearchSubmit struct {
-    Page      int    `form:"page"`
     ContestID string `form:"contest_id"`
     ProblemID int    `form:"problem_id"`
 }
@@ -32,7 +31,7 @@ func AdminSearchSubmitHandler(context *gin.Context) {
         filters["problem_id"] = request.ProblemID
     }
 
-    submits, count, err := model.SearchSubmit(filters, request.Page)
+    submits, count, err := model.SearchSubmit(filters)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return

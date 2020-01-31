@@ -29,7 +29,6 @@ type DBConfig struct {
 	TableSubmit 	   string        `json:"-"`
 	TableLatestSubmit  string        `json:"-"`
 	ChannelBuffer      int           `json:"channel_buffer"`
-	RecordsPerPage     int           `json:"records_per_page"`
 }
 
 type FileConfig struct {
