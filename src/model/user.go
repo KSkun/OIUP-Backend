@@ -88,7 +88,7 @@ func GetUser(contestID string) (UserInfo, bool, error) {
     return user, true, nil
 }
 
-func SearchUser(filters map[string]interface{}) ([]UserInfo, int, error) {
+func SearchUser(filters map[string]interface{}) ([]UserInfo, error) {
     conditionsStr := getSQLConditionsStr(filters)
     values := make([]interface{}, 0)
     for key, value := range filters {
@@ -99,39 +99,18 @@ func SearchUser(filters map[string]interface{}) ([]UserInfo, int, error) {
         values = append(values, value.(string) + "%")
     }
 
-    var count int
-    countUserQueryStr := "SELECT COUNT(*) FROM " + config.Config.DB.TableUser
-    if len(conditionsStr) > 0 {
-        countUserQueryStr += " WHERE " + conditionsStr
-    }
-    countUserQuery, err := db.Prepare(countUserQueryStr)
-    if err != nil {
-        return nil, 0, err
-    }
-    defer countUserQuery.Close()
-    countRows, err := countUserQuery.Query(values...)
-    if err != nil {
-        return nil, 0, err
-    }
-    defer countRows.Close()
-    countRows.Next()
-    err = countRows.Scan(&count)
-    if err != nil {
-        return nil, 0, err
-    }
-
     searchUserQueryStr := "SELECT * FROM " + config.Config.DB.TableUser
     if len(conditionsStr) > 0 {
         searchUserQueryStr += " WHERE " + conditionsStr
     }
     searchUserQuery, err := db.Prepare(searchUserQueryStr)
     if err != nil {
-        return nil, 0, err
+        return nil, err
     }
     defer searchUserQuery.Close()
     rows, err := searchUserQuery.Query(values...)
     if err != nil {
-        return nil, 0, err
+        return nil, err
     }
     defer rows.Close()
 
@@ -140,11 +119,11 @@ func SearchUser(filters map[string]interface{}) ([]UserInfo, int, error) {
         var user UserInfo
         err = rows.Scan(&user.Name, &user.School, &user.ContestID, &user.PersonID, &user.Language)
         if err != nil {
-            return nil, 0, err
+            return nil, err
         }
         users = append(users, user)
     }
-    return users, count, nil
+    return users, nil
 }
 
 func UpdateUser(user UserInfo) error {

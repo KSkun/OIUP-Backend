@@ -43,13 +43,13 @@ func AdminSearchUserHandler(context *gin.Context) {
         filters["language"] = request.Language
     }
 
-    users, count, err := model.SearchUser(filters)
+    users, err := model.SearchUser(filters)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
     }
 
-    util.SuccessResponse(context, gin.H{"count": count, "result": users})
+    util.SuccessResponse(context, gin.H{"result": users})
 }
 
 func AdminAddUserHandler(context *gin.Context) {

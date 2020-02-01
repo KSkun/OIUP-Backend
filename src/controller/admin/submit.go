@@ -31,11 +31,11 @@ func AdminSearchSubmitHandler(context *gin.Context) {
         filters["problem_id"] = request.ProblemID
     }
 
-    submits, count, err := model.SearchSubmit(filters)
+    submits, err := model.SearchSubmit(filters)
     if err != nil {
         util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
         return
     }
 
-    util.SuccessResponse(context, gin.H{"count": count, "result": submits})
+    util.SuccessResponse(context, gin.H{"result": submits})
 }
