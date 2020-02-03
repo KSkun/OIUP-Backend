@@ -6,3 +6,4 @@ test/source
 test/upload
 test/logs
 *.bak
+static

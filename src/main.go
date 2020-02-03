@@ -8,6 +8,7 @@ import (
 	"OIUP-Backend/config"
 	"OIUP-Backend/middleware"
 	"OIUP-Backend/view"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"io"
 	"os"
@@ -44,6 +45,9 @@ func main() {
 
 	adminGroup := apiGroup.Group("/admin")
 	view.InitAdminView(adminGroup)
+
+	router.Use(static.Serve("/", static.LocalFile("./static/user", false)))
+	router.Static("/admin", "./static/admin")
 
 	err = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 	if err != nil {
