@@ -177,6 +177,13 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
             "problem requires submit code file", nil)
         return
     }
+    for _, output := range request.Outputs {
+        if output.TestID < 1 || output.TestID > problem.Testcase {
+            util.ErrorResponse(context, http.StatusBadRequest,
+                "testcase id " + strconv.Itoa(output.TestID) + " out of range", nil)
+            return
+        }
+    }
 
     submitID := uuid.NewV4()
     err := os.MkdirAll(util.GetUploadPath(submitID.String()), os.ModePerm)

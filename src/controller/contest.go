@@ -57,7 +57,7 @@ func ContestNameHandler(context *gin.Context) {
 }
 
 func ContestProblemsHandler(context *gin.Context) {
-    util.SuccessResponse(context, gin.H{"url": config.Config.Contest.Download})
+    util.SuccessResponse(context, gin.H{"url": "file/" + config.Config.Contest.Download})
 }
 
 func ContestUnzipHandler(context *gin.Context) {

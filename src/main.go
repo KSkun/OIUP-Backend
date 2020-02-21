@@ -48,6 +48,7 @@ func main() {
 
 	router.Use(static.Serve("/", static.LocalFile("./static/user", false)))
 	router.Static("/admin", "./static/admin")
+	router.Static("/file", "./static/file")
 
 	err = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 	if err != nil {

@@ -20,9 +20,9 @@
     "name": "CSP-S2 2019 Day 1 (提高组)",
     "status": 1,
     "message": "",
-    "start_time": "2020-02-24 0:40",
+    "start_time": "2020-02-21 22:00",
     "duration": 3.5,
-    "download": "test1",
+    "download": "test1.zip",
     "unzip_token": "BuWang",
     "unzip_shift": 10,
     "problems": [
@@ -32,7 +32,8 @@
         "filename": "code",
         "time_limit": "1.0 秒",
         "space_limit": "256 MiB",
-        "type": 1
+        "type": 1,
+        "testcase": 20
       },
       {
         "id": 2,
@@ -40,7 +41,8 @@
         "filename": "brackets",
         "time_limit": "1.0 秒",
         "space_limit": "256 MiB",
-        "type": 1
+        "type": 1,
+        "testcase": 20
       },
       {
         "id": 3,
@@ -48,34 +50,9 @@
         "filename": "tree",
         "time_limit": "2.0 秒",
         "space_limit": "256 MiB",
-        "type": 2
+        "type": 1,
+        "testcase": 20
       }
-    ],
-    "Problems": {
-      "1": {
-        "id": 1,
-        "name": "格雷码",
-        "filename": "code",
-        "time_limit": "1.0 秒",
-        "space_limit": "256 MiB",
-        "type": 1
-      },
-      "2": {
-        "id": 2,
-        "name": "括号树",
-        "filename": "brackets",
-        "time_limit": "1.0 秒",
-        "space_limit": "256 MiB",
-        "type": 1
-      },
-      "3": {
-        "id": 3,
-        "name": "树上的数",
-        "filename": "tree",
-        "time_limit": "2.0 秒",
-        "space_limit": "256 MiB",
-        "type": 2
-      }
-    }
+    ]
   }
 }

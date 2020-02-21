@@ -49,6 +49,7 @@ type ProblemInfo struct {
 	TimeLimit          string        `json:"time_limit"`
 	SpaceLimit         string        `json:"space_limit"`
 	Type               int           `json:"type"`
+	Testcase           int           `json:"testcase"`
 }
 
 const (
@@ -69,7 +70,7 @@ type ContestConfig struct {
 	UnzipToken         string        `json:"unzip_token"`
 	UnzipShift         int           `json:"unzip_shift"`   // Unit: Minute
 	ProblemSet		   []ProblemInfo `json:"problems"`
-	Problems		   ProblemMap
+	Problems		   ProblemMap    `json:"-"`
 }
 
 type ConfigObject struct {
