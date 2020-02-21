@@ -18,19 +18,19 @@ func AdminGetConfigHandler(context *gin.Context) {
 func AdminModifyConfigHandler(context *gin.Context) {
     var configObj config.ConfigObject
     if err := context.BindJSON(&configObj); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
 
     err := config.ApplyConfig(configObj)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "配置文件错误：" + err.Error(), nil)
         return
     }
 
     err = config.SaveConfig()
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "配置文件错误：" + err.Error(), nil)
         return
     }
 
@@ -40,7 +40,7 @@ func AdminModifyConfigHandler(context *gin.Context) {
 func AdminReloadConfigHandler(context *gin.Context) {
     err := config.LoadConfig()
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "配置文件错误：" + err.Error(), nil)
         return
     }
 

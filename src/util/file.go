@@ -27,5 +27,5 @@ func GetCodeSuffix(language int) (string, error) {
     case model.LanguagePascal:
         return ".pas", nil
     }
-    return "", errors.New("invalid language type")
+    return "", errors.New("不支持该语言类型！")
 }

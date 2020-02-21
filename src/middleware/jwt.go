@@ -23,18 +23,18 @@ func ValidateJWTToken(context *gin.Context, secret []byte) {
 		return secret, nil
 	})
 	if err != nil {
-		util.ErrorResponse(context, http.StatusUnauthorized, "invalid token", nil)
+		util.ErrorResponse(context, http.StatusUnauthorized, "无效令牌！", nil)
 		context.Abort()
 		return
 	}
 
 	if !token.Valid {
-		util.ErrorResponse(context, http.StatusUnauthorized, "invalid token", nil)
+		util.ErrorResponse(context, http.StatusUnauthorized, "无效令牌！", nil)
 		context.Abort()
 		return
 	}
 	if time.Now().Unix() > int64(token.Claims.(jwt.MapClaims)["exp"].(float64)) {
-		util.ErrorResponse(context, http.StatusUnauthorized, "token has expired", nil)
+		util.ErrorResponse(context, http.StatusUnauthorized, "令牌已过期！", nil)
 		context.Abort()
 		return
 	}

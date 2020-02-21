@@ -64,7 +64,7 @@ func ContestUnzipHandler(context *gin.Context) {
     nowTime := time.Now()
     validTime := config.Config.Contest.StartTime.Add(-time.Minute * time.Duration(config.Config.Contest.UnzipShift))
     if nowTime.Before(validTime) {
-        util.ErrorResponse(context, http.StatusForbidden, "contest has not started", nil)
+        util.ErrorResponse(context, http.StatusForbidden, "考试还未开始！", nil)
         return
     }
 

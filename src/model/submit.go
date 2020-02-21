@@ -87,7 +87,7 @@ func GetSubmit(submitID string) (SubmitInfo, bool, error) {
     // HashInfo array unmarshal
     problemConfig, found := config.GetProblemConfig(submit.ProblemID)
     if !found {
-        return SubmitInfo{}, false, errors.New("problem with id " + strconv.Itoa(submit.ProblemID) + " not found")
+        return SubmitInfo{}, false, errors.New("找不到编号为 " + strconv.Itoa(submit.ProblemID) + " 的题目！")
     }
     if problemConfig.Type == config.ProblemAnswer {
         err = json.Unmarshal([]byte(submit.Hash), &submit.HashSet)
@@ -129,7 +129,7 @@ func GetLatestSubmit(user string, problemID int) (SubmitInfo, bool, error) {
         return submit, false, err
     }
     if !found {
-        return submit, false, errors.New("wrong latest_submit record")
+        return submit, false, errors.New("latest_submit 记录错误！")
     }
     return submit, true, nil
 }
@@ -140,7 +140,7 @@ func ConfirmSubmit(submitID string) error {
         return err
     }
     if !found {
-        return errors.New("submit with id " + submitID + " not found")
+        return errors.New("找不到编号为 " + submitID + " 的提交！")
     }
     /*
        Note of SQL Error: database is locked

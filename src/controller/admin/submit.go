@@ -19,7 +19,7 @@ type RequestSearchSubmit struct {
 func AdminSearchSubmitHandler(context *gin.Context) {
     var request RequestSearchSubmit
     if err := context.Bind(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
 
@@ -33,7 +33,7 @@ func AdminSearchSubmitHandler(context *gin.Context) {
 
     submits, err := model.SearchSubmit(filters)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
         return
     }
 

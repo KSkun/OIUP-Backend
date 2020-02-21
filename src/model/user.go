@@ -29,7 +29,7 @@ func AddUser(user UserInfo) error {
         return err
     }
     if found {
-        return errors.New("user with contest_id " + user.ContestID + " already exists")
+        return errors.New("考号为 " + user.ContestID + " 的考生信息已经存在！")
     }
 
     addUserQuery, err := db.Prepare("INSERT INTO " + config.Config.DB.TableUser +
@@ -51,7 +51,7 @@ func DeleteUser(contestID string) error {
         return err
     }
     if !found {
-        return errors.New("user with contest_id " + contestID + " not found")
+        return errors.New("找不到考号为 " + contestID + " 的考生信息！")
     }
 
     deleteUserQuery, err := db.Prepare("DELETE FROM " + config.Config.DB.TableUser +

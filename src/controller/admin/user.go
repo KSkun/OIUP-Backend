@@ -22,7 +22,7 @@ type RequestSearchUser struct {
 func AdminSearchUserHandler(context *gin.Context) {
     var request RequestSearchUser
     if err := context.Bind(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
 
@@ -45,7 +45,7 @@ func AdminSearchUserHandler(context *gin.Context) {
 
     users, err := model.SearchUser(filters)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
         return
     }
 
@@ -55,21 +55,21 @@ func AdminSearchUserHandler(context *gin.Context) {
 func AdminAddUserHandler(context *gin.Context) {
     var request model.UserInfo
     if err := context.BindJSON(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
     if !util.CheckContestID(request.ContestID) {
-        util.ErrorResponse(context, http.StatusBadRequest, "invalid contest_id", nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "考号不合法！", nil)
         return
     }
     if request.Language < 1 || request.Language > 3 {
-        util.ErrorResponse(context, http.StatusBadRequest, "invalid language", nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "语言类型不合法！", nil)
         return
     }
 
     err := model.AddUser(request)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
         return
     }
 
@@ -79,13 +79,13 @@ func AdminAddUserHandler(context *gin.Context) {
 func AdminUpdateUserHandler(context *gin.Context) {
     var request model.UserInfo
     if err := context.BindJSON(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
 
     err := model.UpdateUser(request)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
         return
     }
 
@@ -99,13 +99,13 @@ type RequestUserContestID struct {
 func AdminDeleteUserHandler(context *gin.Context) {
     var request RequestUserContestID
     if err := context.Bind(&request); err != nil {
-        util.ErrorResponse(context, http.StatusBadRequest, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
 
     err := model.DeleteUser(request.ContestID)
     if err != nil {
-        util.ErrorResponse(context, http.StatusInternalServerError, err.Error(), nil)
+        util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
         return
     }
 
