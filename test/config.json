@@ -20,7 +20,7 @@
     "name": "CSP-S2 2019 Day 1 (提高组)",
     "status": 1,
     "message": "",
-    "start_time": "2020-02-22 19:00",
+    "start_time": "2020-02-23 01:00",
     "duration": 3.5,
     "download": "test1.zip",
     "unzip_token": "BuWang",
@@ -56,7 +56,7 @@
       {
         "id": 4,
         "name": "树上的数",
-        "filename": "tree",
+        "filename": "tree1",
         "time_limit": "2.0 秒",
         "space_limit": "256 MiB",
         "type": 2,
