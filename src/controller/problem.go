@@ -191,6 +191,14 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         testID[output.TestID] = 1
     }
 
+    _outputs := make([]OutputInfo, 0)
+    for _, output := range request.Outputs {
+        if len(output.Output) != 0 {
+            _outputs = append(_outputs, output)
+        }
+    }
+    request.Outputs = _outputs
+
     submitID := uuid.NewV4()
     err := os.MkdirAll(util.GetUploadPath(submitID.String()), os.ModePerm)
     if err != nil {
