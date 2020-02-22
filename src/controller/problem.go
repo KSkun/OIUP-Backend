@@ -72,7 +72,7 @@ func ProblemLatestHandler(context *gin.Context) {
     }
     if !found {
         util.ErrorResponse(context, http.StatusForbidden,
-            "您还未提交解答至编号为 " + strconv.Itoa(request.ID) + "的题目！", nil)
+            "您还未提交解答至编号为 " + strconv.Itoa(request.ID) + " 的题目！", nil)
         return
     }
 
@@ -176,12 +176,19 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusForbidden, "题目要求提交源代码文件！", nil)
         return
     }
+    testID := make(map[int]int, 0)
     for _, output := range request.Outputs {
         if output.TestID < 1 || output.TestID > problem.Testcase {
             util.ErrorResponse(context, http.StatusBadRequest,
                 "测试点编号 " + strconv.Itoa(output.TestID) + " 超出范围！", nil)
             return
         }
+        if testID[output.TestID] == 1 {
+            util.ErrorResponse(context, http.StatusBadRequest,
+                "测试点编号 " + strconv.Itoa(output.TestID) + " 重复上传！", nil)
+            return
+        }
+        testID[output.TestID] = 1
     }
 
     submitID := uuid.NewV4()
