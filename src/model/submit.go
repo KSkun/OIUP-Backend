@@ -8,6 +8,7 @@ import (
     "OIUP-Backend/config"
     "encoding/json"
     "errors"
+    "fmt"
     "strconv"
     "time"
 )
@@ -190,7 +191,13 @@ func ConfirmSubmit(submitID string) error {
         Parameters: []interface{}{submit.User, submitID, submit.ProblemID},
     }
     err = <-errCh
-    return err
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(submit.User + ": " + time.Unix(int64(submit.Time), 0).Format("2006-01-02 15:04") +
+        " 题目 " + strconv.Itoa(submit.ProblemID) + " 提交 " + submit.ID)
+    return nil
 }
 
 func SearchSubmit(filters map[string]interface{}) ([]SubmitInfo, error) {
