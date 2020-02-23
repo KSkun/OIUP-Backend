@@ -8,12 +8,18 @@ import (
 	"OIUP-Backend/config"
 	"OIUP-Backend/middleware"
 	"OIUP-Backend/view"
+	"fmt"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
 	"io"
 	"os"
 	"strconv"
 	"time"
+)
+
+const (
+	VERSION = "pre"
 )
 
 func main() {
@@ -50,6 +56,11 @@ func main() {
 	router.Static("/admin", "./static/admin")
 	router.Static("/file", "./static/file")
 
+	fmt.Println("OIUP-Backend " + VERSION + " 启动中...")
+	fmt.Println("系统生成 5 个随机字符串：")
+	for i := 0; i < 5; i++ {
+		fmt.Println(uuid.NewV4().String())
+	}
 	err = router.Run(":" + strconv.Itoa(config.Config.HTTP.Port))
 	if err != nil {
 		panic(err)

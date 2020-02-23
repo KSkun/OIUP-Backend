@@ -150,14 +150,9 @@ type OutputInfo struct {
     Output string `json:"output" binding:"required"`
 }
 
-type RequestOutput struct {
-    ID      int          `json:"id" binding:"required"`
-    Outputs []OutputInfo `json:"outputs" binding:"required"`
-}
-
 func ProblemSubmitOutputHandler(context *gin.Context) {
-    var request RequestOutput
-    if err := context.BindJSON(&request); err != nil {
+    var request RequestProblemID
+    if err := context.BindQuery(&request); err != nil {
         util.ErrorResponse(context, http.StatusBadRequest, "解析请求错误：" + err.Error(), nil)
         return
     }
@@ -176,28 +171,6 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusForbidden, "题目要求提交源代码文件！", nil)
         return
     }
-    testID := make(map[int]int, 0)
-    for _, output := range request.Outputs {
-        if output.TestID < 1 || output.TestID > problem.Testcase {
-            util.ErrorResponse(context, http.StatusBadRequest,
-                "测试点编号 " + strconv.Itoa(output.TestID) + " 超出范围！", nil)
-            return
-        }
-        if testID[output.TestID] == 1 {
-            util.ErrorResponse(context, http.StatusBadRequest,
-                "测试点编号 " + strconv.Itoa(output.TestID) + " 重复上传！", nil)
-            return
-        }
-        testID[output.TestID] = 1
-    }
-
-    _outputs := make([]OutputInfo, 0)
-    for _, output := range request.Outputs {
-        if len(output.Output) != 0 {
-            _outputs = append(_outputs, output)
-        }
-    }
-    request.Outputs = _outputs
 
     submitID := uuid.NewV4()
     err := os.MkdirAll(util.GetUploadPath(submitID.String()), os.ModePerm)
@@ -205,21 +178,35 @@ func ProblemSubmitOutputHandler(context *gin.Context) {
         util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
         return
     }
-    for _, output := range request.Outputs {
-        err := ioutil.WriteFile(util.GetUploadPath(submitID.String()) + strconv.Itoa(output.TestID),
-            []byte(output.Output), os.ModePerm)
+    outputID := make([]int, 0)
+    for i := 1; i <= problem.Testcase; i++ {
+        file, err := context.FormFile(strconv.Itoa(i))
+        if err == http.ErrMissingFile {
+            continue
+        }
         if err != nil {
             util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
             return
         }
+        err = context.SaveUploadedFile(file, util.GetUploadPath(submitID.String()) + strconv.Itoa(i))
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+            return
+        }
+        outputID = append(outputID, i)
     }
 
     user := util.GetIDFromContext(context)
     hashSet := make([]model.HashInfo, 0)
-    for _, output := range request.Outputs {
-        hashRes := sha256.Sum256([]byte(output.Output))
+    for _, id := range outputID {
+        output, err := ioutil.ReadFile(util.GetUploadPath(submitID.String()) + strconv.Itoa(id))
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+            return
+        }
+        hashRes := sha256.Sum256([]byte(output))
         hashStr := hex.EncodeToString(hashRes[:])
-        hashSet = append(hashSet, model.HashInfo{TestID: output.TestID, Hash: hashStr})
+        hashSet = append(hashSet, model.HashInfo{TestID: id, Hash: hashStr})
     }
     err = model.AddOutputSubmit(submitID.String(), user, hashSet, time.Now(), request.ID)
     if err != nil {

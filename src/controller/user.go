@@ -7,8 +7,10 @@ package controller
 import (
     "OIUP-Backend/model"
     "OIUP-Backend/util"
+    "fmt"
     "github.com/gin-gonic/gin"
     "net/http"
+    "time"
 )
 
 type GetTokenRequest struct {
@@ -47,6 +49,7 @@ func UserTokenHandler(context *gin.Context) {
         return
     }
 
+    fmt.Println(request.ContestID + ": " + time.Now().Format("2006-01-02 15:04") + " 登录")
     util.SuccessResponse(context, gin.H{"token": token})
 }
 
