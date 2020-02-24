@@ -7,8 +7,14 @@ package admin
 import (
     "OIUP-Backend/model"
     "OIUP-Backend/util"
+    "encoding/csv"
     "github.com/gin-gonic/gin"
+    uuid "github.com/satori/go.uuid"
+    "io"
+    "io/ioutil"
     "net/http"
+    "os"
+    "strings"
 )
 
 type RequestSearchUser struct {
@@ -113,5 +119,56 @@ func AdminDeleteUserHandler(context *gin.Context) {
 }
 
 func AdminImportUsersHandler(context *gin.Context) {
-    // TODO 根据指定csv导入选手
+    file, err := context.FormFile("data")
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+        return
+    }
+    err = os.MkdirAll(util.GetTempPath(""), os.ModePerm)
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+        return
+    }
+    filename := uuid.NewV4().String() + ".csv"
+    err = context.SaveUploadedFile(file, util.GetTempPath(filename))
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+        return
+    }
+
+    data, err := ioutil.ReadFile(util.GetTempPath(filename))
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+        return
+    }
+    reader := csv.NewReader(strings.NewReader(string(data)))
+    for {
+        line, err := reader.Read()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+            return
+        }
+
+        err = model.AddUser(model.UserInfo{
+            Name:      line[2],
+            School:    line[4],
+            ContestID: line[0],
+            PersonID:  line[3],
+            Language:  model.LanguageCPlusPlus, // manually change it if necessary
+        })
+        if err != nil {
+            util.ErrorResponse(context, http.StatusInternalServerError, "数据库错误：" + err.Error(), nil)
+            return
+        }
+    }
+    err = os.Remove(util.GetTempPath(filename))
+    if err != nil {
+        util.ErrorResponse(context, http.StatusInternalServerError, "文件错误：" + err.Error(), nil)
+        return
+    }
+
+    util.SuccessResponse(context, nil)
 }

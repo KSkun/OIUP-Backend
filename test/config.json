@@ -14,7 +14,8 @@
   },
   "file": {
     "directory_upload": "upload",
-    "directory_source": "source"
+    "directory_source": "source",
+    "directory_temp": "temp"
   },
   "contest": {
     "name": "CSP-S2 2019 Day 1 (提高组)",

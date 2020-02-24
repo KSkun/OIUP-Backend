@@ -18,6 +18,10 @@ func GetSourcePath(contestID string, problemFilename string) string {
     return config.Config.File.DirectorySource + "/" + contestID + "/" + problemFilename + "/"
 }
 
+func GetTempPath(filename string) string {
+    return config.Config.File.DirectoryTemp + "/" + filename
+}
+
 func GetCodeSuffix(language int) (string, error) {
     switch language {
     case model.LanguageCPlusPlus:

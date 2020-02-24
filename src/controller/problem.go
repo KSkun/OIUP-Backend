@@ -145,11 +145,6 @@ func ProblemSubmitCodeHandler(context *gin.Context) {
     })
 }
 
-type OutputInfo struct {
-    TestID int    `json:"test_id" binding:"required"`
-    Output string `json:"output" binding:"required"`
-}
-
 func ProblemSubmitOutputHandler(context *gin.Context) {
     var request RequestProblemID
     if err := context.BindQuery(&request); err != nil {

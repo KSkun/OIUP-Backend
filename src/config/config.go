@@ -34,6 +34,7 @@ type DBConfig struct {
 type FileConfig struct {
 	DirectoryUpload	   string        `json:"directory_upload"`
 	DirectorySource	   string        `json:"directory_source"`
+	DirectoryTemp      string        `json:"directory_temp"`
 }
 
 const (
